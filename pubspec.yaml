@@ -1,0 +1,37 @@
+name: shapeup
+description: "Aplicativo para gestão de treinos e dietas - ShapeUp"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0  # Compatível com sua versão atual
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase (versões compatíveis com Dart 3.5.3)
+  firebase_core: ^2.0.0
+  firebase_auth: 4.17.4
+  cloud_firestore: 4.17.5
+
+  # Gerenciamento de estado
+  provider: ^6.0.0
+
+  # Ícones do iOS
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Ative quando adicionar imagens ou outros ativos:
+  # assets:
+  #   - assets/imagens/
+  #   - assets/icones/

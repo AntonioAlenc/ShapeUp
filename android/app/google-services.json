@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "96429088743",
+    "project_id": "shapeup-390-372",
+    "storage_bucket": "shapeup-390-372.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:96429088743:android:200dde1170d010cdbf6742",
+        "android_client_info": {
+          "package_name": "antonio.joao.shapeup"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOSnSu8c-1lxyc-N5lRDtkIrhD_GJQwC0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
