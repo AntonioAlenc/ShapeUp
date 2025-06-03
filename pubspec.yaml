@@ -30,8 +30,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-  # Ative quando adicionar imagens ou outros ativos:
-  # assets:
-  #   - assets/imagens/
-  #   - assets/icones/
+  assets:
+    - imagens/LogoVazada.png

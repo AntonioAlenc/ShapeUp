@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'telas/carregamento_tela.dart';
+import 'telas/login_tela.dart';
+import 'telas/recuperacao_senha_tela.dart';
+import 'telas/cadastro_tela.dart';
+import 'telas/menu_aluno_tela.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,32 +24,14 @@ class MeuAplicativo extends StatelessWidget {
         primarySwatch: Colors.green,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const TelaInicial(),
-    );
-  }
-}
-
-class TelaInicial extends StatelessWidget {
-  const TelaInicial({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ShapeUp'),
-        centerTitle: true,
-      ),
-      body: const Center(
-        child: Text(
-          '🚀 Firebase integrado com sucesso!',
-          style: TextStyle(
-            fontSize: 22,
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const CarregamentoTela(),
+        '/login': (context) => const LoginTela(),
+        '/recuperacao': (context) => const RecuperacaoSenhaTela(),
+        '/cadastro': (context) => const CadastroTela(),
+        '/menu-aluno': (context) => const MenuAlunoTela(),
+      },
     );
   }
 }
