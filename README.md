@@ -64,8 +64,8 @@ lib/
 - **Instituição**: UNIGRAN – Centro Universitário da Grande Dourados
 - **Orientador**: Prof. M.Sc. Felipe Perez
 - **Alunos**:
-  - Antônio Luiz Inácio Monteiro de Alencar
-  - João Gabriel Furtado Zamarian
+  - Antônio Luiz Inácio Monteiro de Alencar - 802.390
+  - João Gabriel Furtado Zamarian - 802.372
 
 ---
 
