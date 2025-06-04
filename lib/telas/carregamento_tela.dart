@@ -29,7 +29,7 @@ class _CarregamentoTelaState extends State<CarregamentoTela> {
         ),
         child: Center(
           child: Image.asset(
-            'imagens/logo_shapeup.png',
+            'imagens/LogoVazada.png',
             width: 200,
           ),
         ),

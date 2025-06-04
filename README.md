@@ -1,74 +1,111 @@
+
 # 📱 ShapeUp
 
-**ShapeUp** é um aplicativo desenvolvido como parte do Trabalho de Conclusão de Curso (TCC) em Engenharia de Software. O sistema tem como objetivo auxiliar **personal trainers** e **alunos** no gerenciamento de **treinos, dietas, lembretes, progresso físico e comunicação**, tudo de forma centralizada, moderna e acessível.
+O **ShapeUp** é um aplicativo mobile desenvolvido em **Flutter** com o objetivo de auxiliar **alunos** e **personal trainers** na organização de treinos, dietas, progresso físico e comunicação direta via chat.
 
 ---
 
-## 🚀 Tecnologias Utilizadas
+## 🚀 Funcionalidades (Implementadas)
 
-- **Flutter** – Interface multiplataforma
-- **Dart** – Linguagem de programação
-- **Firebase** – Backend como serviço:
-  - Autenticação
-  - Firestore (banco de dados)
-  - Armazenamento
-- **Provider** – Gerenciamento de estado
-- **Git/GitHub** – Controle de versão
+- ✅ Tela de Carregamento
+- ✅ Login e Cadastro com tipo de usuário (aluno ou personal)
+- ✅ Recuperação de senha
+- ✅ Menus distintos para alunos e personal trainers
+- ✅ Treino do Aluno
+- ✅ Treino do Personal
+- ✅ Dieta do Aluno
+- ✅ Dieta do Personal
+- ✅ Chat de Conversa
+- ✅ Perfil do Aluno
+- ✅ Perfil do Personal
+- ✅ Progresso físico
+- ✅ Telas adicionais placeholder (Alunos, Criar Treino, Criar Dieta, Evolução, Lembretes)
 
 ---
 
-## 📦 Estrutura do Projeto
+## 🛠 Tecnologias
+
+- **Flutter 3.22+**
+- **Dart**
+- **Firebase (configuração pendente)**
+- **Material Design**
+- **Estilização personalizada**
+  - Fundo preto
+  - Texto branco
+  - Elementos de destaque em **amarelo vibrante**
+
+---
+
+## 📁 Estrutura de Pastas
 
 ```
 lib/
+│
 ├── main.dart
-├── modelos/                # Entidades do sistema
-│   ├── usuario.dart
-│   ├── treino.dart
-│   ├── dieta.dart
-│   ├── mensagem.dart
-│   ├── progresso.dart
-│   └── lembrete.dart
-├── servicos/               # CRUD com Firebase
-│   ├── firebase_usuario_service.dart
-│   ├── firebase_treino_service.dart
-│   ├── firebase_dieta_service.dart
-│   ├── firebase_mensagem_service.dart
-│   ├── firebase_progresso_service.dart
-│   └── firebase_lembrete_service.dart
-├── telas/                  # (Futuramente) Telas do app
-├── provedores/             # Gerenciamento de estado
-└── utilitarios/            # Constantes, helpers, etc.
+├── telas/
+│   ├── carregamento_tela.dart
+│   ├── login_tela.dart
+│   ├── cadastro_tela.dart
+│   ├── recuperacao_senha_tela.dart
+│   ├── menu_aluno_tela.dart
+│   ├── menu_personal_tela.dart
+│   ├── treino_aluno_tela.dart
+│   ├── treino_personal_tela.dart
+│   ├── dieta_aluno_tela.dart
+│   ├── dieta_personal_tela.dart
+│   ├── chat_tela.dart
+│   ├── progresso_tela.dart
+│   ├── perfil_aluno_tela.dart
+│   ├── perfil_personal_tela.dart
+│   └── placeholder_telas.dart
+└── imagens/
+    └── LogoVazada.png
 ```
 
+---
 
-## 📚 Funcionalidades implementadas
+## 🔧 Firebase (pendente de integração)
 
-- [x] Estrutura do projeto organizada em camadas
-- [x] Integração com Firebase (Auth e Firestore)
-- [x] CRUD completo de:
-  - Usuário
-  - Treino
-  - Dieta
-  - Mensagem
-  - Progresso
-  - Lembrete
-- [ ] Telas de cadastro e listagem
-- [ ] Validações e testes automatizados
+O Firebase será utilizado para:
+
+- Autenticação (e-mail e senha)
+- Firestore para armazenar treinos, dietas, progresso e mensagens
+- Firebase Messaging (futuramente) para notificações
 
 ---
 
-## 👨‍🏫 Projeto acadêmico
+## ▶️ Como rodar o projeto
 
-- **Curso**: Engenharia de Software
-- **Instituição**: UNIGRAN – Centro Universitário da Grande Dourados
-- **Orientador**: Prof. M.Sc. Felipe Perez
-- **Alunos**:
-  - Antônio Luiz Inácio Monteiro de Alencar - 802.390
-  - João Gabriel Furtado Zamarian - 802.372
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/seu-usuario/shapeup.git
+   cd shapeup
+   ```
+
+2. **Instale as dependências:**
+   ```bash
+   flutter pub get
+   ```
+
+3. **Execute o projeto:**
+   - Android: `flutter run`
+   - Emulador: `flutter emulators --launch <nome>`
+   - Web: `flutter run -d chrome` *(pode exibir limitações visuais)*
 
 ---
 
-## 📄 Licença
+## 📌 Observações
 
-Este projeto é de uso acadêmico e não possui fins comerciais.
+- Este projeto é voltado para dispositivos **mobile**.
+- Algumas rotas ainda utilizam **telas placeholder**, aguardando integração com backend.
+- O Firebase já está preparado no `main.dart`, mas o `firebase_options.dart` será gerado após a integração final.
+
+---
+
+## 👨‍💻 Autores
+
+**Antônio Luiz Inácio Monteiro de Alencar - 802.390**  
+**João Gabriel Furtado Zamarian - 802.372**  
+Engenharia de Software – UNIGRAN
+
+---

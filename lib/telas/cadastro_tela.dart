@@ -12,14 +12,14 @@ class _CadastroTelaState extends State<CadastroTela> {
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
-  String _tipoUsuario = 'aluno'; // valor padrão
+  String _tipoUsuario = 'aluno';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text('Criar Conta'),
-        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
@@ -28,44 +28,30 @@ class _CadastroTelaState extends State<CadastroTela> {
             key: _formKey,
             child: Column(
               children: [
-                TextFormField(
+                _campoTexto(
                   controller: _nomeController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nome completo',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Informe o nome' : null,
+                  label: 'Nome completo',
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                _campoTexto(
                   controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'E-mail',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Informe o e-mail' : null,
+                  label: 'E-mail',
+                  teclado: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                _campoTexto(
                   controller: _senhaController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Senha',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Informe a senha' : null,
+                  label: 'Senha',
+                  senha: true,
                 ),
                 const SizedBox(height: 24),
                 Row(
                   children: [
-                    const Text('Tipo de usuário:'),
+                    const Text('Tipo de usuário:', style: TextStyle(color: Colors.white)),
                     const SizedBox(width: 16),
                     Expanded(
                       child: DropdownButtonFormField<String>(
+                        dropdownColor: Colors.grey[900],
                         value: _tipoUsuario,
                         items: const [
                           DropdownMenuItem(
@@ -82,9 +68,18 @@ class _CadastroTelaState extends State<CadastroTela> {
                             setState(() => _tipoUsuario = value);
                           }
                         },
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelStyle: const TextStyle(color: Colors.amber),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.amber),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.amber),
+                          ),
                         ),
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ),
                   ],
@@ -94,8 +89,12 @@ class _CadastroTelaState extends State<CadastroTela> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
@@ -121,6 +120,36 @@ class _CadastroTelaState extends State<CadastroTela> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _campoTexto({
+    required TextEditingController controller,
+    required String label,
+    bool senha = false,
+    TextInputType teclado = TextInputType.text,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: senha,
+      keyboardType: teclado,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.amber),
+        filled: true,
+        fillColor: Colors.grey[900],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.amber),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.amber),
+        ),
+      ),
+      validator: (value) =>
+          value == null || value.isEmpty ? 'Preencha o campo' : null,
     );
   }
 }

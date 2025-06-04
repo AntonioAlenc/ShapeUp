@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class MenuAlunoTela extends StatelessWidget {
-  const MenuAlunoTela({super.key});
+class MenuPersonalTela extends StatelessWidget {
+  const MenuPersonalTela({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Olá, Aluno!'),
+        title: const Text('Olá, Treinador!'),
         centerTitle: true,
         backgroundColor: Colors.black,
         foregroundColor: Colors.amber,
@@ -23,21 +23,21 @@ class MenuAlunoTela extends StatelessWidget {
           children: [
             _menuItem(
               context,
+              icone: Icons.group,
+              titulo: 'Alunos',
+              rota: '/alunos',
+            ),
+            _menuItem(
+              context,
               icone: Icons.fitness_center,
-              titulo: 'Treinos',
-              rota: '/treino-aluno',
+              titulo: 'Criar Treino',
+              rota: '/criar-treino',
             ),
             _menuItem(
               context,
               icone: Icons.restaurant_menu,
-              titulo: 'Dieta',
-              rota: '/dieta-aluno',
-            ),
-            _menuItem(
-              context,
-              icone: Icons.bar_chart,
-              titulo: 'Progresso',
-              rota: '/progresso',
+              titulo: 'Criar Dieta',
+              rota: '/criar-dieta',
             ),
             _menuItem(
               context,
@@ -47,9 +47,9 @@ class MenuAlunoTela extends StatelessWidget {
             ),
             _menuItem(
               context,
-              icone: Icons.alarm,
-              titulo: 'Lembretes',
-              rota: '/lembretes',
+              icone: Icons.bar_chart,
+              titulo: 'Evolução',
+              rota: '/evolucao-aluno',
             ),
           ],
         ),

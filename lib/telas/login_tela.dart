@@ -15,7 +15,7 @@ class _LoginTelaState extends State<LoginTela> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.black,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Center(
@@ -32,11 +32,18 @@ class _LoginTelaState extends State<LoginTela> {
                   const SizedBox(height: 40),
                   TextFormField(
                     controller: _emailController,
+                    style: const TextStyle(color: Colors.white),
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'E-mail',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.email),
+                      labelStyle: const TextStyle(color: Colors.amber),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.amber),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.amber, width: 2),
+                      ),
+                      prefixIcon: const Icon(Icons.email, color: Colors.amber),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -48,11 +55,18 @@ class _LoginTelaState extends State<LoginTela> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _senhaController,
+                    style: const TextStyle(color: Colors.white),
                     obscureText: true,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Senha',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.lock),
+                      labelStyle: const TextStyle(color: Colors.amber),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.amber),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.amber, width: 2),
+                      ),
+                      prefixIcon: const Icon(Icons.lock, color: Colors.amber),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -70,7 +84,7 @@ class _LoginTelaState extends State<LoginTela> {
                       },
                       child: const Text(
                         'Esqueci minha senha',
-                        style: TextStyle(color: Colors.orange),
+                        style: TextStyle(color: Colors.amber),
                       ),
                     ),
                   ),
@@ -79,15 +93,13 @@ class _LoginTelaState extends State<LoginTela> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
+                        backgroundColor: Colors.amber,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         textStyle: const TextStyle(fontSize: 16),
                       ),
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           final email = _emailController.text;
-
-                          // Simulação simples: se for personal, vá para o menu do personal
                           final tipoUsuario = email.contains('personal') ? 'personal' : 'aluno';
 
                           if (tipoUsuario == 'personal') {
@@ -97,21 +109,21 @@ class _LoginTelaState extends State<LoginTela> {
                           }
                         }
                       },
-                      child: const Text('ENTRAR'),
+                      child: const Text('ENTRAR', style: TextStyle(color: Colors.black)),
                     ),
                   ),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('Não tem uma conta?'),
+                      const Text('Não tem uma conta?', style: TextStyle(color: Colors.white)),
                       TextButton(
                         onPressed: () {
                           Navigator.pushNamed(context, '/cadastro');
                         },
                         child: const Text(
                           'Cadastre-se',
-                          style: TextStyle(color: Colors.orange),
+                          style: TextStyle(color: Colors.amber),
                         ),
                       ),
                     ],
