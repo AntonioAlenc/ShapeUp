@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'telas/carregamento_tela.dart';
 import 'telas/login_tela.dart';
@@ -15,7 +18,11 @@ import 'telas/perfil_aluno_tela.dart';
 import 'telas/perfil_personal_tela.dart';
 import 'telas/placeholder_telas.dart';
 
-void main() {
+import 'services/profile_service.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MeuAplicativo());
 }
 
@@ -36,9 +43,21 @@ class MeuAplicativo extends StatelessWidget {
           iconTheme: IconThemeData(color: Colors.amber),
         ),
       ),
-      initialRoute: '/',
+      // Redireciona conforme login
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const CarregamentoTela();
+          }
+          final user = snap.data;
+          if (user == null) return const LoginTela();
+          ProfileService().ensureProfileDoc(); // garante /users/{uid}
+          // TODO: Separa menu do aluno e do personal lendo o campo 'role' do perfil.
+          return const MenuAlunoTela();
+        },
+      ),
       routes: {
-        '/': (context) => const CarregamentoTela(),
         '/login': (context) => const LoginTela(),
         '/recuperacao': (context) => const RecuperacaoSenhaTela(),
         '/cadastro': (context) => const CadastroTela(),

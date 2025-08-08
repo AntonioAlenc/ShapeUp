@@ -30,3 +30,7 @@ flutter:
   uses-material-design: true
   assets:
     - imagens/LogoVazada.png
+
+dependencies:
+  google_sign_in: ^6.2.1
+

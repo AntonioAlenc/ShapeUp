@@ -1,6 +1,2 @@
-import 'package:shapeup/firebase_options.dart';
-
-
-class DefaultFirebaseOptions { 
-  static FirebaseOptions get currentPlatform => ...
-}
+dart pub global activate flutterfire_cli
+flutterfire configure
