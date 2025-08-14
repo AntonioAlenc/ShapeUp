@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-import 'firebase_options.dart'; // Você vai gerar com `flutterfire configure`
+import 'firebase_options.dart'; // <-- aqui
+import 'main.dart' show MeuAplicativo; // sua classe do app
 
-import 'main.dart' show MeuAplicativo;
-
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
