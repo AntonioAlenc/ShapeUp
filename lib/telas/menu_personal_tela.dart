@@ -1,3 +1,4 @@
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 
 class MenuPersonalTela extends StatelessWidget {
@@ -41,9 +42,9 @@ class MenuPersonalTela extends StatelessWidget {
             ),
             _menuItem(
               context,
-              icone: Icons.chat,
-              titulo: 'Chat',
-              rota: '/chat',
+              icone: Icons.chat_bubble,
+              titulo: 'WhatsApp',
+              rota: 'whatsapp:',
             ),
             _menuItem(
               context,
@@ -59,11 +60,17 @@ class MenuPersonalTela extends StatelessWidget {
 
   Widget _menuItem(BuildContext context,
       {required IconData icone,
-      required String titulo,
-      required String rota}) {
+        required String titulo,
+        required String rota}) {
     return InkWell(
-      onTap: () {
-        Navigator.pushNamed(context, rota);
+      onTap: () async {
+        if (rota.startsWith('whatsapp:')) {
+          final msg = Uri.encodeComponent('Olá! Vim pelo app ShapeUp.');
+          final uri = Uri.parse('https://wa.me/?text=' + msg);
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          Navigator.pushNamed(context, rota);
+        }
       },
       borderRadius: BorderRadius.circular(16),
       child: Container(

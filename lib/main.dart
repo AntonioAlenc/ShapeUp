@@ -10,7 +10,6 @@ import 'telas/treino_aluno_tela.dart';
 import 'telas/treino_personal_tela.dart';
 import 'telas/dieta_aluno_tela.dart';
 import 'telas/dieta_personal_tela.dart';
-import 'telas/chat_tela.dart';
 import 'telas/progresso_tela.dart';
 import 'telas/perfil_aluno_tela.dart';
 import 'telas/perfil_personal_tela.dart';
@@ -49,7 +48,6 @@ class MeuAplicativo extends StatelessWidget {
         '/treino-personal': (context) => const TreinoPersonalTela(),
         '/dieta-aluno': (context) => const DietaAlunoTela(),
         '/dieta-personal': (context) => const DietaPersonalTela(),
-        '/chat': (context) => const ChatTela(),
         '/progresso': (context) => const ProgressoTela(),
         '/perfil-aluno': (context) => const PerfilAlunoTela(),
         '/perfil-personal': (context) => const PerfilPersonalTela(),
