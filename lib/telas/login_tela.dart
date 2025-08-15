@@ -106,7 +106,6 @@ class _LoginTelaState extends State<LoginTela> {
                         textStyle: const TextStyle(fontSize: 16),
                       ),
                       onPressed: () async {
-                        // valida os campos do Form
                         if (!_formKey.currentState!.validate()) return;
 
                         final email = _emailController.text.trim();
@@ -117,7 +116,6 @@ class _LoginTelaState extends State<LoginTela> {
                               .entrarEmailSenha(email: email, senha: senha);
 
                           if (!mounted) return;
-                          // o StreamBuilder (main.dart) decide a próxima tela; aqui garantimos a navegação
                           Navigator.of(context).pushReplacementNamed('/');
                         } catch (e) {
                           if (!mounted) return;

@@ -134,7 +134,6 @@ class _PerfilTelaState extends State<PerfilTela> {
               ),
               const SizedBox(height: 12),
 
-              // Senha atual (necessária para trocar email/senha)
               TextFormField(
                 controller: _senhaAtualCtrl,
                 obscureText: true,
@@ -146,7 +145,6 @@ class _PerfilTelaState extends State<PerfilTela> {
               ),
               const SizedBox(height: 12),
 
-              // Nova senha
               TextFormField(
                 controller: _novaSenhaCtrl,
                 obscureText: true,

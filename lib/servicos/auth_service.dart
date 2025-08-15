@@ -30,7 +30,7 @@ class AuthService {
 
   Future<void> atualizarEmail({
     required String novoEmail,
-    required String senhaAtual, // reautenticação exigida pelo Firebase
+    required String senhaAtual,
   }) async {
     if (usuario == null) return;
     final cred = EmailAuthProvider.credential(

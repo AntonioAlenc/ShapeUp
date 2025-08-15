@@ -45,7 +45,6 @@ class MeuAplicativo extends StatelessWidget {
           routes: {
             '/login': (_) => const LoginTela(),
             '/perfil': (_) => const PerfilTela(),
-        // mantenha suas outras rotas
       ),
       // Redireciona conforme login
       home: StreamBuilder(
