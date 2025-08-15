@@ -1,5 +1,7 @@
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
+import '../servicos/auth_service.dart';
+
 
 class MenuPersonalTela extends StatelessWidget {
   const MenuPersonalTela({super.key});
@@ -14,6 +16,40 @@ class MenuPersonalTela extends StatelessWidget {
         backgroundColor: Colors.black,
         foregroundColor: Colors.amber,
         elevation: 0,
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (v) async {
+              if (v == 'perfil') {
+                Navigator.pushNamed(context, '/perfil');
+              } else if (v == 'sair') {
+                await AuthService.instancia.sair();
+                if (context.mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/login',
+                        (_) => false,
+                  );
+                }
+              }
+            },
+            itemBuilder: (context) => const <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: 'perfil',
+                child: ListTile(
+                  leading: Icon(Icons.person),
+                  title: Text('Perfil'),
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'sair',
+                child: ListTile(
+                  leading: Icon(Icons.logout),
+                  title: Text('Sair'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),

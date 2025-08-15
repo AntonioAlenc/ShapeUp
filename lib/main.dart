@@ -42,19 +42,25 @@ class MeuAplicativo extends StatelessWidget {
           titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
           iconTheme: IconThemeData(color: Colors.amber),
         ),
+          routes: {
+            '/login': (_) => const LoginTela(),
+            '/perfil': (_) => const PerfilTela(),
+        // mantenha suas outras rotas
       ),
       // Redireciona conforme login
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
+      home: StreamBuilder(
+        stream: AuthService.instancia.fluxoUsuario,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
-            return const CarregamentoTela();
+            return const CarregamentoTela(); // sua tela de loading
           }
-          final user = snap.data;
-          if (user == null) return const LoginTela();
-          ProfileService().ensureProfileDoc(); // garante /users/{uid}
-          // TODO: Separa menu do aluno e do personal lendo o campo 'role' do perfil.
-          return const MenuAlunoTela();
+          // não logado
+          if (!snap.hasData) return const LoginTela();
+          final user = snap.data!;
+          final ehTreinador = (user.displayName ?? '').toLowerCase().contains('treinador');
+          return ehTreinador
+              ? const DashboardTreinadorTela()
+              : const DashboardAlunoTela();
         },
       ),
       routes: {

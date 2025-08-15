@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../servicos/auth_service.dart';
 
 class LoginTela extends StatefulWidget {
   const LoginTela({super.key});
@@ -11,6 +12,13 @@ class _LoginTelaState extends State<LoginTela> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _senhaController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,16 +105,25 @@ class _LoginTelaState extends State<LoginTela> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         textStyle: const TextStyle(fontSize: 16),
                       ),
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          final email = _emailController.text;
-                          final tipoUsuario = email.contains('personal') ? 'personal' : 'aluno';
+                      onPressed: () async {
+                        // valida os campos do Form
+                        if (!_formKey.currentState!.validate()) return;
 
-                          if (tipoUsuario == 'personal') {
-                            Navigator.pushReplacementNamed(context, '/menu-personal');
-                          } else {
-                            Navigator.pushReplacementNamed(context, '/menu-aluno');
-                          }
+                        final email = _emailController.text.trim();
+                        final senha = _senhaController.text;
+
+                        try {
+                          await AuthService.instancia
+                              .entrarEmailSenha(email: email, senha: senha);
+
+                          if (!mounted) return;
+                          // o StreamBuilder (main.dart) decide a próxima tela; aqui garantimos a navegação
+                          Navigator.of(context).pushReplacementNamed('/');
+                        } catch (e) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Falha no login: $e')),
+                          );
                         }
                       },
                       child: const Text('ENTRAR', style: TextStyle(color: Colors.black)),
