@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-import 'firebase_options.dart'; // <-- aqui
-import 'main.dart' show MeuAplicativo; // sua classe do app
+import 'firebase_options.dart';
+import 'main.dart' show MeuAplicativo;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

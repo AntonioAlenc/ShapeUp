@@ -1,13 +1,13 @@
+// android/app/build.gradle.kts
 plugins {
     id("com.android.application")
-    id("kotlin-android")
+    id("kotlin-android") // pode usar também: id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services")
+    id("com.google.gms.google-services") // 🔹 aplica o Google Services no app
 }
 
-
 android {
-    namespace = "com.example.shapeup"
+    namespace = "antonio.joao.shapeup" // alinhei com o applicationId
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,18 +21,19 @@ android {
     }
 
     defaultConfig {
-        applicationId "antonio.joao.shapeup" 
-        minSdk = flutter.minSdkVersion
+        applicationId = "antonio.joao.shapeup"   // package Android do seu app
+        minSdk = 23                               // recomendado p/ Firebase atual
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-    }
 
+        // Se, no futuro, der erro de 65k métodos:
+        // multiDexEnabled = true
+    }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Para testes, assina com a debug. Em produção, configure sua keystore.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -42,3 +43,10 @@ flutter {
     source = "../.."
 }
 
+// (Opcional) Dependências Java/Kotlin específicas do módulo.
+// Para Flutter + Firebase, normalmente não precisa declarar nada aqui, pois os
+// pacotes do Flutter cuidam das libs nativas via Gradle.
+// dependencies {
+//     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+//     implementation("com.google.firebase:firebase-analytics-ktx")
+// }

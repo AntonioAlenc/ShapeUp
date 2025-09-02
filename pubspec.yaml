@@ -5,16 +5,19 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.5.0  # compatível com Dart 3.8.x instalado
+  sdk: ^3.5.0
 
 dependencies:
   flutter:
     sdk: flutter
 
-  # Firebase (linha 4.x estável e ampla em projetos com Flutter 3.x)
+  # Firebase (linha 4.x estável p/ Flutter 3.x)
   firebase_core: ^2.27.0
   firebase_auth: ^4.17.8
   cloud_firestore: ^4.15.10
+
+  # Login Google
+  google_sign_in: ^6.2.1
 
   # Estado / utilidades
   provider: ^6.1.2
@@ -30,7 +33,3 @@ flutter:
   uses-material-design: true
   assets:
     - imagens/LogoVazada.png
-
-dependencies:
-  google_sign_in: ^6.2.1
-

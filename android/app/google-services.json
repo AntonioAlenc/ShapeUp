@@ -1,26 +1,44 @@
 {
   "project_info": {
-    "project_number": "96429088743",
-    "project_id": "shapeup-390-372",
-    "storage_bucket": "shapeup-390-372.firebasestorage.app"
+    "project_number": "86259693753",
+    "project_id": "shapeup-dev",
+    "storage_bucket": "shapeup-dev.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:96429088743:android:200dde1170d010cdbf6742",
+        "mobilesdk_app_id": "1:86259693753:android:6c3ef3d90c51e11ecac368",
         "android_client_info": {
           "package_name": "antonio.joao.shapeup"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "86259693753-jokr2lep459vsdpco8qkj3da4ppq5vov.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "antonio.joao.shapeup",
+            "certificate_hash": "967088848646710057c8a9a1bc238deb7948bf03"
+          }
+        },
+        {
+          "client_id": "86259693753-kh519taa6m318qlatej5koaqsfv7otae.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyAOSnSu8c-1lxyc-N5lRDtkIrhD_GJQwC0"
+          "current_key": "AIzaSyBqNNmYIixAwVSvmX44n1o9HIOYMHA-d90"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "86259693753-kh519taa6m318qlatej5koaqsfv7otae.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

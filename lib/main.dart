@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'firebase_options.dart'; // <- usa a classe GERADA: DefaultFirebaseOptions
+
+// TELAS (ajuste conforme o seu projeto)
 import 'telas/carregamento_tela.dart';
 import 'telas/login_tela.dart';
 import 'telas/recuperacao_senha_tela.dart';
@@ -18,11 +20,11 @@ import 'telas/perfil_aluno_tela.dart';
 import 'telas/perfil_personal_tela.dart';
 import 'telas/placeholder_telas.dart';
 
-import 'services/profile_service.dart';
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform, // <- aqui
+  );
   runApp(const MeuAplicativo());
 }
 
@@ -42,25 +44,6 @@ class MeuAplicativo extends StatelessWidget {
           titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
           iconTheme: IconThemeData(color: Colors.amber),
         ),
-          routes: {
-            '/login': (_) => const LoginTela(),
-            '/perfil': (_) => const PerfilTela(),
-      ),
-      // Redireciona conforme login
-      home: StreamBuilder(
-        stream: AuthService.instancia.fluxoUsuario,
-        builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const CarregamentoTela(); // sua tela de loading
-          }
-          // não logado
-          if (!snap.hasData) return const LoginTela();
-          final user = snap.data!;
-          final ehTreinador = (user.displayName ?? '').toLowerCase().contains('treinador');
-          return ehTreinador
-              ? const DashboardTreinadorTela()
-              : const DashboardAlunoTela();
-        },
       ),
       routes: {
         '/login': (context) => const LoginTela(),
@@ -81,6 +64,22 @@ class MeuAplicativo extends StatelessWidget {
         '/evolucao-aluno': (context) => const EvolucaoAlunoTela(),
         '/lembretes': (context) => const LembretesTela(),
       },
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const CarregamentoTela();
+          }
+          if (!snap.hasData) return const LoginTela();
+
+          final user = snap.data!;
+          final nome = (user.displayName ?? '').toLowerCase();
+          final ehTreinador =
+              nome.contains('treinador') || nome.contains('personal');
+
+          return ehTreinador ? const MenuPersonalTela() : const MenuAlunoTela();
+        },
+      ),
     );
   }
 }
