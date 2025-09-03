@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'firebase_options.dart'; // <- usa a classe GERADA: DefaultFirebaseOptions
+import 'firebase_options.dart'; // Configurações geradas pelo FlutterFire
+import 'servicos/firebase_lembrete_service.dart'; // Inicialização de lembretes locais
 
-// TELAS (ajuste conforme o seu projeto)
+// TELAS
 import 'telas/carregamento_tela.dart';
 import 'telas/login_tela.dart';
 import 'telas/recuperacao_senha_tela.dart';
@@ -22,9 +23,15 @@ import 'telas/placeholder_telas.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicializa Firebase
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform, // <- aqui
+    options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Inicializa lembretes locais
+  await FirebaseLembreteService.init();
+
   runApp(const MeuAplicativo());
 }
 
@@ -58,6 +65,8 @@ class MeuAplicativo extends StatelessWidget {
         '/progresso': (context) => const ProgressoTela(),
         '/perfil-aluno': (context) => const PerfilAlunoTela(),
         '/perfil-personal': (context) => const PerfilPersonalTela(),
+
+        // Essas telas vêm do placeholder_telas.dart
         '/alunos': (context) => const AlunosTela(),
         '/criar-treino': (context) => const CriarTreinoTela(),
         '/criar-dieta': (context) => const CriarDietaTela(),
@@ -70,7 +79,9 @@ class MeuAplicativo extends StatelessWidget {
           if (snap.connectionState == ConnectionState.waiting) {
             return const CarregamentoTela();
           }
-          if (!snap.hasData) return const LoginTela();
+          if (!snap.hasData) {
+            return const LoginTela();
+          }
 
           final user = snap.data!;
           final nome = (user.displayName ?? '').toLowerCase();

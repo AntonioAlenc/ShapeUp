@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../modelos/treino.dart';
+import '../servicos/firebase_treino_service.dart';
 
 class TreinoAlunoTela extends StatelessWidget {
   const TreinoAlunoTela({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final _service = FirebaseTreinoService();
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -17,29 +23,39 @@ class TreinoAlunoTela extends StatelessWidget {
         title: const Text('Treinos', style: TextStyle(color: Colors.white)),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _blocoTreino(
-            titulo: 'Peito/Ombros',
-            exercicios: [
-              'Supino Inclinado c/ Halteres\nSéries: 2x5-10\nIntervalo: 60s',
-              'Crucifixo Inclinado na Polia\nSéries: 3x5-10\nIntervalo: 60s',
-              'Supino Reto c/ Barra\nSéries: 2x10-15\nIntervalo: 120s',
-              'Elevação Lateral c/ Halteres\nSéries: 4x6-8\nIntervalo: 90s',
-              'Elevação Frontal c/ Corda\nSéries: 3x8-10\nIntervalo: 60s',
-            ],
-            exibirBotaoFinalizar: true,
-          ),
-          const SizedBox(height: 16),
-          _blocoTreino(
-            titulo: 'Costas/Abdominal',
-            exercicios: [
-              'Remada Curvada c/ Barra Reta\nSéries: 3x12\nIntervalo: 60s',
-              'Abdominal Infra no Banco\nSéries: 3x15\nIntervalo: 45s',
-            ],
-          ),
-        ],
+      body: StreamBuilder<List<Treino>>(
+        stream: _service.treinosDoAluno(uid),
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snap.hasData || snap.data!.isEmpty) {
+            return const Center(
+              child: Text(
+                'Nenhum treino atribuído',
+                style: TextStyle(color: Colors.white70),
+              ),
+            );
+          }
+
+          final treinos = snap.data!;
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: treinos.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 16),
+            itemBuilder: (_, i) {
+              final t = treinos[i];
+              return _blocoTreino(
+                titulo: t.nome,
+                exercicios: t.exercicios
+                    .map((e) =>
+                '${e.nome}\nSéries: ${e.series}x${e.reps}\nDescanso: ${e.descansoSeg}s')
+                    .toList(),
+                exibirBotaoFinalizar: true,
+              );
+            },
+          );
+        },
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
@@ -54,7 +70,7 @@ class TreinoAlunoTela extends StatelessWidget {
           BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
         ],
         onTap: (index) {
-          // Implementar navegação real com base no index
+          // TODO: implementar navegação real
         },
       ),
     );
@@ -85,7 +101,7 @@ class TreinoAlunoTela extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ...exercicios.map(
-            (e) => Padding(
+                (e) => Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Text(
                 e,
@@ -98,7 +114,11 @@ class TreinoAlunoTela extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: ElevatedButton(
                 onPressed: () {
-                  // Lógica futura
+                  // TODO: registrar conclusão do treino no Firestore
+                  ScaffoldMessenger.of(_scaffoldKey.currentContext!)
+                      .showSnackBar(const SnackBar(
+                    content: Text('Treino finalizado!'),
+                  ));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.amber,
@@ -112,3 +132,8 @@ class TreinoAlunoTela extends StatelessWidget {
     );
   }
 }
+
+// 🔑 Para usar SnackBar corretamente dentro de StatelessWidget,
+// podemos declarar uma GlobalKey:
+final GlobalKey<ScaffoldMessengerState> _scaffoldKey =
+GlobalKey<ScaffoldMessengerState>();

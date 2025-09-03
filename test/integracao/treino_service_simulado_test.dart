@@ -11,7 +11,10 @@ void main() {
         nome: 'Peito/Ombros',
         descricao: 'Treino para peito e ombros',
         frequencia: '3x por semana',
-        exercicios: ['Supino', 'Crucifixo'],
+        exercicios: [
+          Exercicio(nome: 'Supino', series: 3, reps: 10, descansoSeg: 60),
+          Exercicio(nome: 'Crucifixo', series: 3, reps: 12, descansoSeg: 60),
+        ],
         alunoId: 'aluno123',
         personalId: 'personal456',
       );
@@ -23,6 +26,27 @@ void main() {
       expect(recuperado, isNotNull);
       expect(recuperado!.nome, equals('Peito/Ombros'));
       expect(recuperado.exercicios.length, equals(2));
+      expect(recuperado.exercicios.first.nome, equals('Supino'));
+    });
+
+    test('Listar todos os treinos', () async {
+      final treino = Treino(
+        id: 'treino002',
+        nome: 'Costas/Abdômen',
+        descricao: 'Treino para costas e abdômen',
+        frequencia: '2x por semana',
+        exercicios: [
+          Exercicio(nome: 'Remada curvada', series: 4, reps: 10, descansoSeg: 90),
+        ],
+        alunoId: 'aluno456',
+        personalId: 'personal789',
+      );
+
+      await servico.salvarTreino(treino);
+      final todos = await servico.listarTodos();
+
+      expect(todos, isNotEmpty);
+      expect(todos.any((t) => t.id == 'treino002'), isTrue);
     });
   });
 }
