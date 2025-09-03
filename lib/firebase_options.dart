@@ -8,10 +8,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions não foi configurado para Web. '
-        'Rode `flutterfire configure` para adicionar Web, ou use apenas Android.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -31,7 +28,6 @@ class DefaultFirebaseOptions {
     }
   }
 
-  // ---- Android ----
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBqNNmYIixAwVSvmX44n1o9HIOYMHA-d90',
     appId: '1:86259693753:android:6c3ef3d90c51e11ecac368',
@@ -39,4 +35,17 @@ class DefaultFirebaseOptions {
     projectId: 'shapeup-dev',
     storageBucket: 'shapeup-dev.firebasestorage.app',
   );
+
+  // ---- Android ----
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDIWGu8dl4utzg86TF0FnoegGnVRt2xwh8',
+    appId: '1:86259693753:web:d7e16405df059fc4cac368',
+    messagingSenderId: '86259693753',
+    projectId: 'shapeup-dev',
+    authDomain: 'shapeup-dev.firebaseapp.com',
+    storageBucket: 'shapeup-dev.firebasestorage.app',
+    measurementId: 'G-1X6F4Q27K6',
+  );
+
 }

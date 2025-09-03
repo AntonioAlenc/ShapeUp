@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../servicos/auth_service.dart';
 
 class CadastroTela extends StatefulWidget {
   const CadastroTela({super.key});
@@ -9,17 +10,68 @@ class CadastroTela extends StatefulWidget {
 
 class _CadastroTelaState extends State<CadastroTela> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nomeController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _senhaController = TextEditingController();
+  final _nomeController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _senhaController = TextEditingController();
   String _tipoUsuario = 'aluno';
+  bool _carregando = false;
+
+  @override
+  void dispose() {
+    _nomeController.dispose();
+    _emailController.dispose();
+    _senhaController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _criarConta() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _carregando = true);
+    try {
+      await AuthService.instancia.cadastrarEmailSenha(
+        nome: _nomeController.text,
+        email: _emailController.text,
+        senha: _senhaController.text,
+        tipoUsuario: _tipoUsuario, // << salva no Firestore
+      );
+
+      // sucesso → navega conforme o tipo
+      final rota =
+          _tipoUsuario == 'personal' ? '/menu-personal' : '/menu-aluno';
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Conta criada! Verifique seu e-mail para confirmar o cadastro.',
+            ),
+          ),
+        );
+        Navigator.pushReplacementNamed(context, rota);
+      }
+    } catch (e) {
+      final msg = AuthService.instancia.traduzErro(e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _carregando = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.amber,
         title: const Text('Criar Conta'),
+        centerTitle: true,
+        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
@@ -37,17 +89,28 @@ class _CadastroTelaState extends State<CadastroTela> {
                   controller: _emailController,
                   label: 'E-mail',
                   teclado: TextInputType.emailAddress,
+                  validacao: (v) {
+                    if (v == null || v.isEmpty) return 'Preencha o e-mail';
+                    if (!v.contains('@')) return 'E-mail inválido';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 _campoTexto(
                   controller: _senhaController,
                   label: 'Senha',
                   senha: true,
+                  validacao: (v) {
+                    if (v == null || v.isEmpty) return 'Informe a senha';
+                    if (v.length < 6) return 'Mínimo 6 caracteres';
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 24),
                 Row(
                   children: [
-                    const Text('Tipo de usuário:', style: TextStyle(color: Colors.white)),
+                    const Text('Tipo de usuário:',
+                        style: TextStyle(color: Colors.white)),
                     const SizedBox(width: 16),
                     Expanded(
                       child: DropdownButtonFormField<String>(
@@ -96,18 +159,14 @@ class _CadastroTelaState extends State<CadastroTela> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        print('Criar conta: ${_emailController.text} como $_tipoUsuario');
-
-                        final rota = _tipoUsuario == 'personal'
-                            ? '/menu-personal'
-                            : '/menu-aluno';
-
-                        Navigator.pushReplacementNamed(context, rota);
-                      }
-                    },
-                    child: const Text('CRIAR CONTA'),
+                    onPressed: _carregando ? null : _criarConta,
+                    child: _carregando
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('CRIAR CONTA'),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -128,6 +187,7 @@ class _CadastroTelaState extends State<CadastroTela> {
     required String label,
     bool senha = false,
     TextInputType teclado = TextInputType.text,
+    String? Function(String?)? validacao,
   }) {
     return TextFormField(
       controller: controller,
@@ -148,8 +208,8 @@ class _CadastroTelaState extends State<CadastroTela> {
           borderSide: const BorderSide(color: Colors.amber),
         ),
       ),
-      validator: (value) =>
-          value == null || value.isEmpty ? 'Preencha o campo' : null,
+      validator: validacao ??
+          (value) => value == null || value.isEmpty ? 'Preencha o campo' : null,
     );
   }
 }
