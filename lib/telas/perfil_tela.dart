@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../servicos/auth_service.dart';
+import 'login_tela.dart';
 
 class PerfilTela extends StatefulWidget {
   const PerfilTela({super.key});
@@ -10,80 +13,58 @@ class PerfilTela extends StatefulWidget {
 
 class _PerfilTelaState extends State<PerfilTela> {
   final _formKey = GlobalKey<FormState>();
+  final _nomeController = TextEditingController();
+  final _idadeController = TextEditingController();
+  final _pesoController = TextEditingController();
+  final _alturaController = TextEditingController();
 
-  final _nomeCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
-  final _senhaAtualCtrl = TextEditingController();
-  final _novaSenhaCtrl = TextEditingController();
-
-  bool _salvando = false;
+  User? get user => AuthService.instancia.usuarioAtual;
 
   @override
   void initState() {
     super.initState();
-    final u = AuthService.instancia.usuario;
-    _nomeCtrl.text = u?.displayName ?? '';
-    _emailCtrl.text = u?.email ?? '';
+    _carregarDados();
   }
 
-  @override
-  void dispose() {
-    _nomeCtrl.dispose();
-    _emailCtrl.dispose();
-    _senhaAtualCtrl.dispose();
-    _novaSenhaCtrl.dispose();
-    super.dispose();
+  Future<void> _carregarDados() async {
+    if (user == null) return;
+    final snap = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .get();
+
+    if (snap.exists) {
+      final data = snap.data()!;
+      _nomeController.text = data['nome'] ?? '';
+      _idadeController.text = data['idade']?.toString() ?? '';
+      _pesoController.text = data['peso']?.toString() ?? '';
+      _alturaController.text = data['altura']?.toString() ?? '';
+      setState(() {});
+    }
   }
 
   Future<void> _salvar() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _salvando = true);
+    if (!_formKey.currentState!.validate() || user == null) return;
 
-    final auth = AuthService.instancia;
-    final nome = _nomeCtrl.text.trim();
-    final email = _emailCtrl.text.trim();
-    final senhaAtual = _senhaAtualCtrl.text;
-    final novaSenha = _novaSenhaCtrl.text;
+    await FirebaseFirestore.instance.collection('users').doc(user!.uid).update({
+      'nome': _nomeController.text,
+      'idade': int.tryParse(_idadeController.text),
+      'peso': double.tryParse(_pesoController.text),
+      'altura': double.tryParse(_alturaController.text),
+    });
 
-    try {
-      // Atualiza nome
-      if (nome.isNotEmpty && nome != (auth.usuario?.displayName ?? '')) {
-        await auth.atualizarNome(nome);
-      }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Perfil atualizado!")),
+    );
+  }
 
-      // Atualiza email
-      if (email.isNotEmpty && email != (auth.usuario?.email ?? '')) {
-        if (senhaAtual.isEmpty) {
-          throw Exception('Informe a senha atual para alterar o e-mail.');
-        }
-        await auth.atualizarEmail(novoEmail: email, senhaAtual: senhaAtual);
-      }
-
-      // Atualiza senha
-      if (novaSenha.isNotEmpty) {
-        if (senhaAtual.isEmpty) {
-          throw Exception('Informe a senha atual para alterar a senha.');
-        }
-        await auth.atualizarSenha(
-          senhaAtual: senhaAtual,
-          novaSenha: novaSenha,
-        );
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Perfil atualizado com sucesso!')),
-        );
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _salvando = false);
+  Future<void> _logout() async {
+    await AuthService.instancia.sair();
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginTela()),
+      );
     }
   }
 
@@ -91,82 +72,40 @@ class _PerfilTelaState extends State<PerfilTela> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfil'),
-        centerTitle: true,
+        title: const Text("Meu Perfil"),
+        actions: [
+          IconButton(onPressed: _logout, icon: const Icon(Icons.logout))
+        ],
       ),
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
-          child: Column(
+          child: ListView(
             children: [
-              const CircleAvatar(
-                radius: 36,
-                child: Icon(Icons.person, size: 36),
+              TextFormField(
+                controller: _nomeController,
+                decoration: const InputDecoration(labelText: "Nome"),
+                validator: (v) =>
+                    v != null && v.isNotEmpty ? null : "Digite seu nome",
+              ),
+              TextFormField(
+                controller: _idadeController,
+                decoration: const InputDecoration(labelText: "Idade"),
+                keyboardType: TextInputType.number,
+              ),
+              TextFormField(
+                controller: _pesoController,
+                decoration: const InputDecoration(labelText: "Peso (kg)"),
+                keyboardType: TextInputType.number,
+              ),
+              TextFormField(
+                controller: _alturaController,
+                decoration: const InputDecoration(labelText: "Altura (m)"),
+                keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 16),
-
-              // Nome
-              TextFormField(
-                controller: _nomeCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Nome',
-                  prefixIcon: Icon(Icons.badge_outlined),
-                  border: OutlineInputBorder(),
-                ),
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'Informe seu nome'
-                    : null,
-              ),
-              const SizedBox(height: 12),
-
-              // Email
-              TextFormField(
-                controller: _emailCtrl,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'E-mail',
-                  prefixIcon: Icon(Icons.mail_outline),
-                  border: OutlineInputBorder(),
-                ),
-                validator: (v) =>
-                (v == null || !v.contains('@')) ? 'E-mail inválido' : null,
-              ),
-              const SizedBox(height: 12),
-
-              TextFormField(
-                controller: _senhaAtualCtrl,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Senha atual (obrigatória para alterar e-mail/senha)',
-                  prefixIcon: Icon(Icons.lock_outline),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              TextFormField(
-                controller: _novaSenhaCtrl,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Nova senha (opcional)',
-                  prefixIcon: Icon(Icons.lock_reset),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton.icon(
-                  onPressed: _salvando ? null : _salvar,
-                  icon: const Icon(Icons.save_outlined),
-                  label: _salvando
-                      ? const Text('Salvando...')
-                      : const Text('Salvar alterações'),
-                ),
-              ),
+              ElevatedButton(onPressed: _salvar, child: const Text("Salvar")),
             ],
           ),
         ),

@@ -1,76 +1,62 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/data/latest_all.dart' as tzdata;
-import 'package:timezone/timezone.dart' as tz;
 import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class FirebaseLembreteService {
-  static final _plugin = FlutterLocalNotificationsPlugin();
-  static bool _initOk = false;
+  static final FlutterLocalNotificationsPlugin _notificacoes =
+      FlutterLocalNotificationsPlugin();
 
-  // Inicialização
+  /// Inicializa notificações locais (somente no Android/iOS).
   static Future<void> init() async {
-    if (_initOk) return;
-    tzdata.initializeTimeZones();
+    if (kIsWeb) {
+      // Web não suporta notificações locais → apenas ignora
+      return;
+    }
+
+    if (!(Platform.isAndroid || Platform.isIOS)) {
+      return;
+    }
 
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const settings = InitializationSettings(android: androidInit);
-
-    await _plugin.initialize(settings);
-    _initOk = true;
-
-    if (Platform.isAndroid) {
-      final impl = _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
-      await impl?.requestNotificationsPermission();
-    }
-  }
-
-  /// Agenda notificações semanais para os dias informados (1=Seg .. 7=Dom)
-  static Future<void> agendarParaDiasSemana({
-    required int idBase,
-    required String titulo,
-    required String mensagem,
-    required List<int> diasSemana,
-    required String horarioHHmm,
-  }) async {
-    await init();
-    final parts = horarioHHmm.split(':');
-    final h = int.parse(parts[0]);
-    final m = int.parse(parts[1]);
-
-    const details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        'treinos_channel',
-        'Lembretes de Treino',
-        channelDescription: 'Notificações para horário de treino',
-        importance: Importance.max,
-        priority: Priority.high,
-      ),
+    const iosInit = DarwinInitializationSettings();
+    const initSettings = InitializationSettings(
+      android: androidInit,
+      iOS: iosInit,
     );
 
-    for (final d in diasSemana) {
-      final id = idBase + d;
-      await _plugin.zonedSchedule(
-        id,
-        titulo,
-        mensagem,
-        _proximaDataSemanal(d, h, m),
-        details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-        UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-      );
-    }
+    await _notificacoes.initialize(initSettings);
   }
 
-  static tz.TZDateTime _proximaDataSemanal(int diaSemana, int hour, int minute) {
-    final now = tz.TZDateTime.now(tz.local);
-    var scheduled =
-    tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-    while (scheduled.weekday != diaSemana || scheduled.isBefore(now)) {
-      scheduled = scheduled.add(const Duration(days: 1));
-    }
-    return scheduled;
+  /// Exemplo: agendar notificação local
+  static Future<void> agendarNotificacao({
+    required String titulo,
+    required String corpo,
+    int id = 0,
+  }) async {
+    if (kIsWeb) return;
+
+    const androidDetails = AndroidNotificationDetails(
+      'canal_principal',
+      'Lembretes',
+      channelDescription: 'Notificações de treinos e dietas',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const iosDetails = DarwinNotificationDetails();
+
+    const notificacaoDetalhes = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notificacoes.show(id, titulo, corpo, notificacaoDetalhes);
   }
+
+  static Future<void> agendarParaDiasSemana(
+      {required int idBase,
+      required String titulo,
+      required String mensagem,
+      required List<int> diasSemana,
+      required String horarioHHmm}) async {}
 }

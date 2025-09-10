@@ -30,10 +30,10 @@ class _CadastroTelaState extends State<CadastroTela> {
     setState(() => _carregando = true);
     try {
       await AuthService.instancia.cadastrarEmailSenha(
-        nome: _nomeController.text,
-        email: _emailController.text,
-        senha: _senhaController.text,
-        tipoUsuario: _tipoUsuario, // << salva no Firestore
+        nome: _nomeController.text.trim(),
+        email: _emailController.text.trim(),
+        senha: _senhaController.text.trim(),
+        tipoUsuario: _tipoUsuario, // agora suportado no AuthService
       );
 
       // sucesso → navega conforme o tipo
@@ -44,17 +44,17 @@ class _CadastroTelaState extends State<CadastroTela> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Conta criada! Verifique seu e-mail para confirmar o cadastro.',
+              'Conta criada com sucesso!',
             ),
           ),
         );
         Navigator.pushReplacementNamed(context, rota);
       }
     } catch (e) {
-      final msg = AuthService.instancia.traduzErro(e);
+      final msg = e.toString().replaceAll('Exception: ', '');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg)),
+          SnackBar(content: Text('Erro ao criar conta: $msg')),
         );
       }
     } finally {
@@ -132,10 +132,8 @@ class _CadastroTelaState extends State<CadastroTela> {
                           }
                         },
                         decoration: InputDecoration(
-                          labelStyle: const TextStyle(color: Colors.amber),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.amber),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -172,7 +170,10 @@ class _CadastroTelaState extends State<CadastroTela> {
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Já tenho conta'),
+                  child: const Text(
+                    'Já tenho conta',
+                    style: TextStyle(color: Colors.amber),
+                  ),
                 ),
               ],
             ),
@@ -201,7 +202,6 @@ class _CadastroTelaState extends State<CadastroTela> {
         fillColor: Colors.grey[900],
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.amber),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

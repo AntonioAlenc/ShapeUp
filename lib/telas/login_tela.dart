@@ -36,32 +36,27 @@ class _LoginTelaState extends State<LoginTela> {
         senha: senha,
       );
 
-      if (user == null) throw Exception('Falha inesperada.');
+      if (user == null) {
+        throw Exception('Falha inesperada no login.');
+      }
 
-      // (Opcional) Exigir verificação de e-mail:
-      // if (!AuthService.instancia.emailVerificado) {
-      //   await AuthService.instancia.enviarVerificacaoEmail();
-      //   if (!mounted) return;
-      //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      //     content: Text('Verifique seu e-mail para confirmar o cadastro.'),
-      //   ));
-      // }
-
-      // Busca o perfil para decidir rota
+      // Busca o perfil no Firestore
       final snap = await FirebaseFirestore.instance
-          .collection('usuarios')
+          .collection('users') // ⚠️ Corrigido: antes estava "usuarios"
           .doc(user.uid)
           .get();
 
       final dados = snap.data() ?? {};
-      final tipo = (dados['tipo'] ?? 'aluno').toString();
+      final tipo = (dados['tipo'] ?? 'aluno').toString().toLowerCase();
 
+      // Decide rota
       final rota = (tipo == 'personal') ? '/menu-personal' : '/menu-aluno';
 
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed(rota);
     } catch (e) {
-      final msg = AuthService.instancia.traduzErro(e);
+      // ⚠️ Corrigido: AuthService não tinha traduzErro
+      final msg = e.toString().replaceAll('Exception: ', '');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Falha no login: $msg')),
@@ -133,6 +128,9 @@ class _LoginTelaState extends State<LoginTela> {
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Informe a senha';
+                      }
+                      if (value.length < 6) {
+                        return 'A senha deve ter pelo menos 6 caracteres';
                       }
                       return null;
                     },
