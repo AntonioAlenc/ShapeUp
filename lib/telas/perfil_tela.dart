@@ -46,16 +46,25 @@ class _PerfilTelaState extends State<PerfilTela> {
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate() || user == null) return;
 
-    await FirebaseFirestore.instance.collection('users').doc(user!.uid).update({
-      'nome': _nomeController.text,
+    final ref = FirebaseFirestore.instance.collection('users').doc(user!.uid);
+
+    await ref.update({
+      'nome': _nomeController.text.trim(),
       'idade': int.tryParse(_idadeController.text),
       'peso': double.tryParse(_pesoController.text),
       'altura': double.tryParse(_alturaController.text),
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Perfil atualizado!")),
-    );
+    // pega o tipo de usuário
+    final snap = await ref.get();
+    final dados = snap.data() ?? {};
+    final tipo = (dados['tipo'] ?? 'aluno').toString().toLowerCase();
+
+    if (!mounted) return;
+
+    // abre o menu correto
+    final rota = (tipo == 'personal') ? '/menu-personal' : '/menu-aluno';
+    Navigator.pushReplacementNamed(context, rota);
   }
 
   Future<void> _logout() async {
@@ -105,7 +114,10 @@ class _PerfilTelaState extends State<PerfilTela> {
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 16),
-              ElevatedButton(onPressed: _salvar, child: const Text("Salvar")),
+              ElevatedButton(
+                onPressed: _salvar,
+                child: const Text("Salvar e abrir Menu"),
+              ),
             ],
           ),
         ),

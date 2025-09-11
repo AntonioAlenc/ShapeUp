@@ -3,8 +3,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'firebase_options.dart'; // Configurações do FlutterFire
+import 'firebase_options.dart';
 import 'servicos/firebase_lembrete_service.dart';
 
 // TELAS
@@ -14,15 +15,17 @@ import 'telas/recuperacao_senha_tela.dart';
 import 'telas/cadastro_tela.dart';
 import 'telas/perfil_tela.dart';
 
+// Menus
+import 'telas/menu_aluno_tela.dart';
+import 'telas/menu_personal_tela.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Inicializa Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Inicializa lembretes locais só no mobile
+  // 🔹 Inicializa lembretes locais apenas em mobile
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     await FirebaseLembreteService.init();
   }
@@ -47,12 +50,18 @@ class MeuAplicativo extends StatelessWidget {
           iconTheme: IconThemeData(color: Colors.amber),
         ),
       ),
+
+      // 🔹 Todas as rotas importantes declaradas
       routes: {
         '/login': (context) => const LoginTela(),
-        '/recuperacao': (context) => const RecuperacaoSenhaTela(),
         '/cadastro': (context) => const CadastroTela(),
+        '/recuperacao': (context) => const RecuperacaoSenhaTela(),
         '/perfil': (context) => const PerfilTela(),
+        '/menu-aluno': (context) => const MenuAlunoTela(),
+        '/menu-personal': (context) => const MenuPersonalTela(),
       },
+
+      // 🔹 Decide tela inicial dinamicamente
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snap) {
@@ -60,11 +69,32 @@ class MeuAplicativo extends StatelessWidget {
             return const CarregamentoTela();
           }
           if (!snap.hasData) {
-            // Sempre começa pelo Login
-            return const LoginTela();
+            return const LoginTela(); // usuário não logado
           }
-          // Usuário logado → vai para perfil
-          return const PerfilTela();
+
+          final uid = snap.data!.uid;
+          return FutureBuilder<DocumentSnapshot>(
+            future:
+            FirebaseFirestore.instance.collection('users').doc(uid).get(),
+            builder: (context, snapUser) {
+              if (snapUser.connectionState == ConnectionState.waiting) {
+                return const CarregamentoTela();
+              }
+              if (!snapUser.hasData || !snapUser.data!.exists) {
+                return const LoginTela();
+              }
+
+              final dados = snapUser.data!.data() as Map<String, dynamic>;
+              final tipo = (dados['tipo'] ?? 'aluno').toString().toLowerCase();
+
+              // 🔹 Decide menu com base no tipo de usuário
+              if (tipo == 'personal') {
+                return const MenuPersonalTela();
+              } else {
+                return const MenuAlunoTela();
+              }
+            },
+          );
         },
       ),
     );

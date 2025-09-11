@@ -8,15 +8,18 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  /// Usuário atual logado
   User? get usuarioAtual => _auth.currentUser;
 
+  /// Stream para ouvir mudanças de login/logout
   Stream<User?> get mudancasUsuario => _auth.authStateChanges();
 
+  /// Cadastro com e-mail e senha
   Future<User?> cadastrarEmailSenha({
     required String email,
     required String senha,
     required String nome,
-    required String tipoUsuario,
+    required String tipoUsuario, // "aluno" ou "personal"
   }) async {
     try {
       final cred = await _auth.createUserWithEmailAndPassword(
@@ -24,19 +27,27 @@ class AuthService {
         password: senha,
       );
 
-      // Salva no Firestore
-      await _db.collection('users').doc(cred.user!.uid).set({
+      final uid = cred.user!.uid;
+
+      // salva no Firestore
+      await _db.collection('users').doc(uid).set({
         'nome': nome,
         'email': email,
-        'createdAt': DateTime.now(),
+        'tipo': tipoUsuario,
+        'idade': null,
+        'peso': null,
+        'altura': null,
+        'createdAt': FieldValue.serverTimestamp(),
       });
 
       return cred.user;
     } on FirebaseAuthException catch (e) {
-      throw Exception(e.message);
+      // repassa erro traduzido
+      throw Exception(e.code);
     }
   }
 
+  /// Login com e-mail e senha
   Future<User?> entrarEmailSenha({
     required String email,
     required String senha,
@@ -48,13 +59,21 @@ class AuthService {
       );
       return cred.user;
     } on FirebaseAuthException catch (e) {
-      throw Exception(e.message);
+      throw Exception(e.code);
     }
   }
 
+  /// Logout
   Future<void> sair() async {
     await _auth.signOut();
   }
 
-  traduzErro(Object e) {}
+  /// Recuperação de senha
+  Future<void> recuperarSenha(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw Exception(e.code);
+    }
+  }
 }

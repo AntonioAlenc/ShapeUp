@@ -1,7 +1,4 @@
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
-import '../servicos/auth_service.dart';
-
 
 class MenuPersonalTela extends StatelessWidget {
   const MenuPersonalTela({super.key});
@@ -11,82 +8,39 @@ class MenuPersonalTela extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Olá, Treinador!'),
-        centerTitle: true,
+        title: const Text("Menu do Personal"),
         backgroundColor: Colors.black,
-        foregroundColor: Colors.amber,
-        elevation: 0,
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (v) async {
-              if (v == 'perfil') {
-                Navigator.pushNamed(context, '/perfil');
-              } else if (v == 'sair') {
-                await AuthService.instancia.sair();
-                if (context.mounted) {
-                  Navigator.of(context).pushNamedAndRemoveUntil(
-                    '/login',
-                        (_) => false,
-                  );
-                }
-              }
-            },
-            itemBuilder: (context) => const <PopupMenuEntry<String>>[
-              PopupMenuItem<String>(
-                value: 'perfil',
-                child: ListTile(
-                  leading: Icon(Icons.person),
-                  title: Text('Perfil'),
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'sair',
-                child: ListTile(
-                  leading: Icon(Icons.logout),
-                  title: Text('Sair'),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: GridView.count(
           crossAxisCount: 2,
-          crossAxisSpacing: 16,
           mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
           children: [
-            _menuItem(
+            _cardMenu(
               context,
-              icone: Icons.group,
-              titulo: 'Alunos',
-              rota: '/alunos',
-            ),
-            _menuItem(
-              context,
+              titulo: "Gerenciar Treinos",
               icone: Icons.fitness_center,
-              titulo: 'Criar Treino',
-              rota: '/criar-treino',
+              rota: "/treino-lista-personal",
             ),
-            _menuItem(
+            _cardMenu(
               context,
+              titulo: "Gerenciar Dietas",
               icone: Icons.restaurant_menu,
-              titulo: 'Criar Dieta',
-              rota: '/criar-dieta',
+              rota: "/dieta-personal",
             ),
-            _menuItem(
+            _cardMenu(
               context,
-              icone: Icons.chat_bubble,
-              titulo: 'WhatsApp',
-              rota: 'whatsapp:',
+              titulo: "Alunos",
+              icone: Icons.group,
+              rota: "/alunos",
             ),
-            _menuItem(
+            _cardMenu(
               context,
-              icone: Icons.bar_chart,
-              titulo: 'Evolução',
-              rota: '/evolucao-aluno',
+              titulo: "Perfil",
+              icone: Icons.person,
+              rota: "/perfil",
             ),
           ],
         ),
@@ -94,26 +48,14 @@ class MenuPersonalTela extends StatelessWidget {
     );
   }
 
-  Widget _menuItem(BuildContext context,
-      {required IconData icone,
-        required String titulo,
-        required String rota}) {
-    return InkWell(
-      onTap: () async {
-        if (rota.startsWith('whatsapp:')) {
-          final msg = Uri.encodeComponent('Olá! Vim pelo app ShapeUp.');
-          final uri = Uri.parse('https://wa.me/?text=' + msg);
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
-          Navigator.pushNamed(context, rota);
-        }
-      },
-      borderRadius: BorderRadius.circular(16),
+  Widget _cardMenu(BuildContext context,
+      {required String titulo, required IconData icone, required String rota}) {
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, rota),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.grey[900],
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.amber),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -122,11 +64,7 @@ class MenuPersonalTela extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               titulo,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 16),
             ),
           ],
         ),
