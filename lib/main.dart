@@ -19,6 +19,17 @@ import 'telas/perfil_tela.dart';
 import 'telas/menu_aluno_tela.dart';
 import 'telas/menu_personal_tela.dart';
 
+// Aluno
+import 'telas/treino_aluno_tela.dart';
+import 'telas/dieta_aluno_tela.dart';
+import 'telas/progresso_tela.dart';
+import 'telas/perfil_aluno_tela.dart';
+
+// Personal
+import 'telas/treino_personal_lista_tela.dart';
+import 'telas/dieta_personal_tela.dart';
+import 'telas/alunos_tela.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -57,8 +68,21 @@ class MeuAplicativo extends StatelessWidget {
         '/cadastro': (context) => const CadastroTela(),
         '/recuperacao': (context) => const RecuperacaoSenhaTela(),
         '/perfil': (context) => const PerfilTela(),
+
+        // Menus
         '/menu-aluno': (context) => const MenuAlunoTela(),
         '/menu-personal': (context) => const MenuPersonalTela(),
+
+        // Aluno
+        '/treino-aluno': (context) => const TreinoAlunoTela(),
+        '/dieta-aluno': (context) => const DietaAlunoTela(),
+        '/progresso': (context) => const ProgressoTela(),
+        '/perfil-aluno': (context) => const PerfilAlunoTela(),
+
+        // Personal
+        '/treino-lista-personal': (context) => const TreinoPersonalListaTela(),
+        '/dieta-personal': (context) => const DietaPersonalTela(),
+        '/alunos': (context) => const AlunosTela(),
       },
 
       // 🔹 Decide tela inicial dinamicamente
@@ -74,8 +98,7 @@ class MeuAplicativo extends StatelessWidget {
 
           final uid = snap.data!.uid;
           return FutureBuilder<DocumentSnapshot>(
-            future:
-            FirebaseFirestore.instance.collection('users').doc(uid).get(),
+            future: FirebaseFirestore.instance.collection('users').doc(uid).get(),
             builder: (context, snapUser) {
               if (snapUser.connectionState == ConnectionState.waiting) {
                 return const CarregamentoTela();

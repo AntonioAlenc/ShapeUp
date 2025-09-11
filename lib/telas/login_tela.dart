@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../servicos/auth_service.dart';
 
 class LoginTela extends StatefulWidget {
@@ -14,7 +15,37 @@ class _LoginTelaState extends State<LoginTela> {
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
   bool _carregando = false;
-  bool _lembrarMe = false; // 🔹 novo controle do checkbox
+  bool _lembrarMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarPreferencias();
+  }
+
+  Future<void> _carregarPreferencias() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lembrar = prefs.getBool('lembrarMe') ?? false;
+    final emailSalvo = prefs.getString('emailSalvo') ?? '';
+
+    setState(() {
+      _lembrarMe = lembrar;
+      if (lembrar && emailSalvo.isNotEmpty) {
+        _emailController.text = emailSalvo;
+      }
+    });
+  }
+
+  Future<void> _salvarPreferencias() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_lembrarMe) {
+      await prefs.setBool('lembrarMe', true);
+      await prefs.setString('emailSalvo', _emailController.text.trim());
+    } else {
+      await prefs.remove('lembrarMe');
+      await prefs.remove('emailSalvo');
+    }
+  }
 
   Future<void> _entrar() async {
     if (!_formKey.currentState!.validate()) return;
@@ -37,12 +68,12 @@ class _LoginTelaState extends State<LoginTela> {
       final dados = snap.data() ?? {};
       final tipo = (dados['tipo'] ?? 'aluno').toString().toLowerCase();
 
+      // 🔹 Salva preferências após login bem-sucedido
+      await _salvarPreferencias();
+
       final rota = (tipo == 'personal') ? '/menu-personal' : '/menu-aluno';
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, rota);
-
-      // 🔹 Aqui você pode salvar a flag do "lembrar-me" em SharedPreferences
-      // se quiser manter a sessão mesmo após fechar o app
     } catch (e) {
       String msg = e.toString();
       if (msg.contains("wrong-password")) {
@@ -78,7 +109,7 @@ class _LoginTelaState extends State<LoginTela> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.amber, // fundo superior amarelo
+      backgroundColor: Colors.amber,
       body: SafeArea(
         child: Column(
           children: [
@@ -129,8 +160,6 @@ class _LoginTelaState extends State<LoginTela> {
                           validator: (v) =>
                           v == null || v.length < 6 ? "Senha inválida" : null,
                         ),
-
-                        // 🔹 Botão "Esqueci minha senha?"
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
@@ -146,8 +175,6 @@ class _LoginTelaState extends State<LoginTela> {
                             ),
                           ),
                         ),
-
-                        // 🔹 Checkbox "Lembrar-me"
                         CheckboxListTile(
                           value: _lembrarMe,
                           onChanged: (v) =>
@@ -161,7 +188,6 @@ class _LoginTelaState extends State<LoginTela> {
                           checkColor: Colors.black,
                           contentPadding: EdgeInsets.zero,
                         ),
-
                         const SizedBox(height: 16),
                         SizedBox(
                           width: double.infinity,

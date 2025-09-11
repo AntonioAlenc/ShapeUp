@@ -1,73 +1,247 @@
 import 'package:flutter/material.dart';
 
-class MenuAlunoTela extends StatelessWidget {
+// importe suas telas reais
+import 'treino_aluno_tela.dart';
+import 'dieta_aluno_tela.dart';
+import 'progresso_tela.dart';
+import 'perfil_aluno_tela.dart';
+
+class MenuAlunoTela extends StatefulWidget {
   const MenuAlunoTela({super.key});
 
   @override
+  State<MenuAlunoTela> createState() => _MenuAlunoTelaState();
+}
+
+class _MenuAlunoTelaState extends State<MenuAlunoTela> {
+  int _indiceSelecionado = 0;
+
+  // 🔹 valores simulados do progresso mensal
+  final Map<String, double> valores = {
+    "Jan": 15.0,
+    "Fev": 12.0,
+    "Mar": 18.0,
+    "Abr": 25.0,
+  };
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _indiceSelecionado = index;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final List<Widget> telas = [
+      _telaInicio(context),
+      const TreinoAlunoTela(),
+      const DietaAlunoTela(),
+      const ProgressoTela(),
+      const PerfilAlunoTela(),
+    ];
+
+    final List<String> titulos = [
+      "Bom dia, João!",
+      "Treino",
+      "Dieta",
+      "Progresso",
+      "Perfil",
+    ];
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text("Menu do Aluno"),
         backgroundColor: Colors.black,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: GridView.count(
-          crossAxisCount: 2,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-          children: [
-            _cardMenu(
-              context,
-              titulo: "Meus Treinos",
-              icone: Icons.fitness_center,
-              rota: "/treino-aluno",
-            ),
-            _cardMenu(
-              context,
-              titulo: "Minha Dieta",
-              icone: Icons.restaurant,
-              rota: "/dieta-aluno",
-            ),
-            _cardMenu(
-              context,
-              titulo: "Progresso",
-              icone: Icons.show_chart,
-              rota: "/progresso",
-            ),
-            _cardMenu(
-              context,
-              titulo: "Perfil",
-              icone: Icons.person,
-              rota: "/perfil",
-            ),
-          ],
+        elevation: 0,
+        title: Text(
+          titulos[_indiceSelecionado],
+          style: const TextStyle(color: Colors.white, fontSize: 20),
         ),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: CircleAvatar(
+              backgroundColor: Colors.amber,
+              child: Icon(Icons.person, color: Colors.black),
+            ),
+          ),
+        ],
+      ),
+      body: telas[_indiceSelecionado],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _indiceSelecionado,
+        backgroundColor: Colors.black,
+        selectedItemColor: Colors.amber,
+        unselectedItemColor: Colors.white70,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: "Início",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center),
+            label: "Treino",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.restaurant),
+            label: "Dieta",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.show_chart),
+            label: "Progresso",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: "Perfil",
+          ),
+        ],
+        onTap: _onItemTapped,
       ),
     );
   }
 
-  Widget _cardMenu(BuildContext context,
-      {required String titulo, required IconData icone, required String rota}) {
-    return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, rota),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[900],
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icone, size: 48, color: Colors.amber),
-            const SizedBox(height: 12),
-            Text(
-              titulo,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+  // 🔹 Tela inicial (dashboard do aluno)
+  Widget _telaInicio(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _cardSecao(
+            titulo: "Treino de Hoje",
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Membros Superiores",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+                const SizedBox(height: 8),
+                const Text("• Supino Reto",
+                    style: TextStyle(color: Colors.white70)),
+                const Text("• Pulley Frontal",
+                    style: TextStyle(color: Colors.white70)),
+                const Text("• Rosca Direta",
+                    style: TextStyle(color: Colors.white70)),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() => _indiceSelecionado = 1); // abre treino
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text("INICIAR TREINO"),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 16),
+
+          _cardSecao(
+            titulo: "Refeições do dia",
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Café da Manhã",
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
+                const SizedBox(height: 8),
+                const Text("• 2 Bananas",
+                    style: TextStyle(color: Colors.white70)),
+                const Text("• 20g de Aveia",
+                    style: TextStyle(color: Colors.white70)),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() => _indiceSelecionado = 2); // abre dieta
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text("MARCAR COMO FEITO"),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          _cardSecao(
+            titulo: "Progresso",
+            child: SizedBox(
+              height: 200,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: valores.entries.map((entry) {
+                  final mes = entry.key;
+                  final valor = entry.value;
+                  final altura = (valor / 30) * 180;
+
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        width: 30,
+                        height: altura,
+                        decoration: BoxDecoration(
+                          color: Colors.amber,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        mes,
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🔹 Card
+  Widget _cardSecao({required String titulo, required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            titulo,
+            style: const TextStyle(
+              color: Colors.amber,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
       ),
     );
   }

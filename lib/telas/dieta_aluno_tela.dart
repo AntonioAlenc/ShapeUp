@@ -5,90 +5,63 @@ class DietaAlunoTela extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.amber),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Minha Dieta', style: TextStyle(color: Colors.white)),
-        centerTitle: true,
-      ),
-      body: ListView(
+    return Container(
+      color: Colors.black,
+      child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _blocoRefeicao(
-            titulo: 'Café da manhã',
+            context,
+            titulo: 'Café da Manhã',
             alimentos: [
-              'Aveia - 50g',
-              'Banana - 1 unidade',
-              'Clara de ovo - 3 unidades',
+              '2 Bananas',
+              '20g de Aveia',
             ],
           ),
           _blocoRefeicao(
+            context,
             titulo: 'Almoço',
             alimentos: [
-              'Arroz integral - 100g',
-              'Frango grelhado - 150g',
-              'Brócolis cozido - 80g',
+              '120g de Arroz',
+              '50g de Feijão',
+              '180g de Frango',
+              'Salada Livre',
+              'Refri (Apenas 0)',
             ],
           ),
           _blocoRefeicao(
-            titulo: 'Pré-treino',
+            context,
+            titulo: 'Lanche da Tarde',
             alimentos: [
-              'Batata-doce - 120g',
-              'Peito de frango - 100g',
+              '2 Fatias de Pão Integral',
+              '10g de Muçarela',
+              '20g de Whey',
             ],
           ),
           _blocoRefeicao(
+            context,
             titulo: 'Jantar',
             alimentos: [
-              'Ovos mexidos - 2 unidades',
-              'Abobrinha refogada - 80g',
-            ],
-          ),
-          _blocoRefeicao(
-            titulo: 'Ceia',
-            alimentos: [
-              'Iogurte natural - 1 pote',
-              'Castanhas - 20g',
+              'Omelete com 3 ovos',
+              'Salada de tomate',
             ],
           ),
         ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.amber,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        currentIndex: 2,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Início'),
-          BottomNavigationBarItem(icon: Icon(Icons.fitness_center), label: 'Treino'),
-          BottomNavigationBarItem(icon: Icon(Icons.restaurant), label: 'Dieta'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
-        ],
-        onTap: (index) {
-          // Implementar navegação entre abas se necessário
-        },
       ),
     );
   }
 
-  Widget _blocoRefeicao({
-    required String titulo,
-    required List<String> alimentos,
-  }) {
+  Widget _blocoRefeicao(
+      BuildContext context, {
+        required String titulo,
+        required List<String> alimentos,
+      }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.amber.withOpacity(0.6)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,14 +74,33 @@ class DietaAlunoTela extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           ...alimentos.map(
-            (alimento) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+                (alimento) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
               child: Text(
                 alimento,
                 style: const TextStyle(color: Colors.white),
               ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('$titulo marcado como feito!')),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text("Feito"),
             ),
           ),
         ],

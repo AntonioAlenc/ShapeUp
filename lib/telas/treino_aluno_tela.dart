@@ -10,19 +10,17 @@ class TreinoAlunoTela extends StatelessWidget {
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      return const Scaffold(
-        body: Center(
-            child: Text(
-                'Não autenticado',
-              style: TextStyle(color: Colors.white),
-            ),
+      return const Center(
+        child: Text(
+          'Não autenticado',
+          style: TextStyle(color: Colors.white),
         ),
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Meus Treinos')),
-      body: StreamBuilder<List<Treino>>(
+    return Container(
+      color: Colors.black,
+      child: StreamBuilder<List<Treino>>(
         stream: TreinoService.instancia.streamTreinosDoAluno(uid),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
@@ -32,78 +30,81 @@ class TreinoAlunoTela extends StatelessWidget {
           if (lista.isEmpty) {
             return const Center(
               child: Text(
-                  'Nenhum treino atribuído',
-                  style: TextStyle(color: Colors.white),
+                'Nenhum treino atribuído',
+                style: TextStyle(color: Colors.white),
               ),
             );
           }
+
           return ListView.separated(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             itemCount: lista.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, __) => const SizedBox(height: 16),
             itemBuilder: (context, i) {
               final t = lista[i];
-              return Card(
-                color: Colors.grey[900],
-                child:Theme(
-                  data: Theme.of(context).copyWith(
-                dividerColor: Colors.transparent,
-                unselectedWidgetColor: Colors.amber,
-                ),
-                child: ExpansionTile(
-                  iconColor: Colors.amber,
-                  collapsedIconColor: Colors.amber,
-                  title: Text(
-                    t.nome,
-                    style: const TextStyle(
-                      color: Colors.amber,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: Text(
-                    t.frequencia,
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (t.descricao.isNotEmpty)
-                            Text(
-                              t.descricao,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          const SizedBox(height: 8),
-                          const Text(
-                                  'Exercícios:',
-                                    style: TextStyle(fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                          const SizedBox(height: 4),
-                          ...t.exercicios.map((e) => Row(
-                                children: [
-                                  const Icon(Icons.fitness_center, size: 16, color: Colors.amber),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(e, style:const TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
+              return _cardTreino(context, t);
             },
           );
         },
+      ),
+    );
+  }
+
+  /// 🔹 Card de treino individual
+  Widget _cardTreino(BuildContext context, Treino t) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            t.nome,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Lista de exercícios
+          ...t.exercicios.map(
+                (e) => Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Text(
+                e,
+                style: const TextStyle(color: Colors.white70),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Botão Finalizar
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
+              onPressed: () {
+                // 🔹 Futuro: aqui podemos salvar no Firestore "concluidoEm"
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Treino "${t.nome}" finalizado!')),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text("Finalizar"),
+            ),
+          ),
+        ],
       ),
     );
   }
