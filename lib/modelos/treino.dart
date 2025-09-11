@@ -1,39 +1,15 @@
-class Exercicio {
-  final String nome;
-  final int series;
-  final int reps;
-  final int descansoSeg;
-
-  Exercicio({
-    required this.nome,
-    required this.series,
-    required this.reps,
-    required this.descansoSeg,
-  });
-
-  Map<String, dynamic> toMap() => {
-    'nome': nome,
-    'series': series,
-    'reps': reps,
-    'descansoSeg': descansoSeg,
-  };
-
-  factory Exercicio.fromMap(Map<String, dynamic> m) => Exercicio(
-    nome: m['nome'] ?? '',
-    series: (m['series'] ?? 0) as int,
-    reps: (m['reps'] ?? 0) as int,
-    descansoSeg: (m['descansoSeg'] ?? 0) as int,
-  );
-}
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Treino {
   final String id;
   final String nome;
   final String descricao;
-  final String frequencia; // ex.: "Seg/Qua/Sex"
-  final List<Exercicio> exercicios; // agora é lista de objetos
-  final String alunoId; // UID do aluno
-  final String personalId; // UID do treinador/personal
+  final String frequencia; // ex.: "3x por semana"
+  final List<String> exercicios; // lista de nomes
+  final String personalId; // uid do personal criador
+  final String? alunoId; // uid do aluno atribuído (pode ser null)
+  final DateTime criadoEm;
+  final DateTime? atualizadoEm;
 
   Treino({
     required this.id,
@@ -41,32 +17,83 @@ class Treino {
     required this.descricao,
     required this.frequencia,
     required this.exercicios,
-    required this.alunoId,
     required this.personalId,
+    this.alunoId,
+    required this.criadoEm,
+    this.atualizadoEm,
   });
+
+  factory Treino.novo({
+    required String nome,
+    required String descricao,
+    required String frequencia,
+    required List<String> exercicios,
+    required String personalId,
+    String? alunoId,
+  }) {
+    return Treino(
+      id: '',
+      nome: nome,
+      descricao: descricao,
+      frequencia: frequencia,
+      exercicios: exercicios,
+      personalId: personalId,
+      alunoId: alunoId,
+      criadoEm: DateTime.now(),
+      atualizadoEm: null,
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
       'nome': nome,
       'descricao': descricao,
       'frequencia': frequencia,
-      'exercicios': exercicios.map((e) => e.toMap()).toList(),
-      'alunoId': alunoId,
+      'exercicios': exercicios,
       'personalId': personalId,
+      'alunoId': alunoId,
+      'criadoEm': Timestamp.fromDate(criadoEm),
+      'atualizadoEm':
+          atualizadoEm != null ? Timestamp.fromDate(atualizadoEm!) : null,
     };
   }
 
-  factory Treino.fromMap(Map<String, dynamic> map, String id) {
+  factory Treino.fromDoc(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
     return Treino(
-      id: id,
-      nome: map['nome'] ?? '',
-      descricao: map['descricao'] ?? '',
-      frequencia: map['frequencia'] ?? '',
-      exercicios: (map['exercicios'] as List? ?? [])
-          .map((e) => Exercicio.fromMap(Map<String, dynamic>.from(e)))
-          .toList(),
-      alunoId: map['alunoId'] ?? '',
-      personalId: map['personalId'] ?? '',
+      id: doc.id,
+      nome: data['nome'] ?? '',
+      descricao: data['descricao'] ?? '',
+      frequencia: data['frequencia'] ?? '',
+      exercicios: (data['exercicios'] as List?)?.cast<String>() ?? const [],
+      personalId: data['personalId'] ?? '',
+      alunoId: data['alunoId'],
+      criadoEm: (data['criadoEm'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      atualizadoEm: (data['atualizadoEm'] as Timestamp?)?.toDate(),
+    );
+  }
+
+  Treino copyWith({
+    String? id,
+    String? nome,
+    String? descricao,
+    String? frequencia,
+    List<String>? exercicios,
+    String? personalId,
+    String? alunoId,
+    DateTime? criadoEm,
+    DateTime? atualizadoEm,
+  }) {
+    return Treino(
+      id: id ?? this.id,
+      nome: nome ?? this.nome,
+      descricao: descricao ?? this.descricao,
+      frequencia: frequencia ?? this.frequencia,
+      exercicios: exercicios ?? this.exercicios,
+      personalId: personalId ?? this.personalId,
+      alunoId: alunoId ?? this.alunoId,
+      criadoEm: criadoEm ?? this.criadoEm,
+      atualizadoEm: atualizadoEm ?? this.atualizadoEm,
     );
   }
 }

@@ -16,46 +16,36 @@ class _CadastroTelaState extends State<CadastroTela> {
   String _tipoUsuario = 'aluno';
   bool _carregando = false;
 
-  @override
-  void dispose() {
-    _nomeController.dispose();
-    _emailController.dispose();
-    _senhaController.dispose();
-    super.dispose();
-  }
-
   Future<void> _criarConta() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _carregando = true);
+
     try {
       await AuthService.instancia.cadastrarEmailSenha(
         nome: _nomeController.text.trim(),
         email: _emailController.text.trim(),
         senha: _senhaController.text.trim(),
-        tipoUsuario: _tipoUsuario, // agora suportado no AuthService
+        tipoUsuario: _tipoUsuario,
       );
 
-      // sucesso → navega conforme o tipo
-      final rota =
-          _tipoUsuario == 'personal' ? '/menu-personal' : '/menu-aluno';
-
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Conta criada com sucesso!',
-            ),
-          ),
+        Navigator.pushReplacementNamed(
+          context,
+          _tipoUsuario == 'personal' ? '/menu-personal' : '/menu-aluno',
         );
-        Navigator.pushReplacementNamed(context, rota);
       }
     } catch (e) {
-      final msg = e.toString().replaceAll('Exception: ', '');
+      String msg = e.toString();
+      if (msg.contains('email-already-in-use')) {
+        msg = 'Este e-mail já está cadastrado. Tente fazer login.';
+      } else if (msg.contains('weak-password')) {
+        msg = 'A senha é muito fraca. Use pelo menos 6 caracteres.';
+      } else if (msg.contains('invalid-email')) {
+        msg = 'O e-mail informado é inválido.';
+      }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao criar conta: $msg')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
       }
     } finally {
       if (mounted) setState(() => _carregando = false);
@@ -67,149 +57,76 @@ class _CadastroTelaState extends State<CadastroTela> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
+        title: const Text("Criar Conta"),
         backgroundColor: Colors.black,
-        foregroundColor: Colors.amber,
-        title: const Text('Criar Conta'),
-        centerTitle: true,
-        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                _campoTexto(
-                  controller: _nomeController,
-                  label: 'Nome completo',
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              _campoTexto(_nomeController, "Nome completo"),
+              const SizedBox(height: 16),
+              _campoTexto(_emailController, "E-mail",
+                  teclado: TextInputType.emailAddress),
+              const SizedBox(height: 16),
+              _campoTexto(_senhaController, "Senha", senha: true),
+              const SizedBox(height: 24),
+              DropdownButtonFormField<String>(
+                value: _tipoUsuario,
+                dropdownColor: Colors.grey[900],
+                items: const [
+                  DropdownMenuItem(value: "aluno", child: Text("Aluno")),
+                  DropdownMenuItem(
+                      value: "personal", child: Text("Personal Trainer")),
+                ],
+                onChanged: (v) => setState(() => _tipoUsuario = v ?? 'aluno'),
+                decoration: const InputDecoration(
+                  labelText: "Tipo de usuário",
+                  labelStyle: TextStyle(color: Colors.amber),
                 ),
-                const SizedBox(height: 16),
-                _campoTexto(
-                  controller: _emailController,
-                  label: 'E-mail',
-                  teclado: TextInputType.emailAddress,
-                  validacao: (v) {
-                    if (v == null || v.isEmpty) return 'Preencha o e-mail';
-                    if (!v.contains('@')) return 'E-mail inválido';
-                    return null;
-                  },
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: _carregando ? null : _criarConta,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                const SizedBox(height: 16),
-                _campoTexto(
-                  controller: _senhaController,
-                  label: 'Senha',
-                  senha: true,
-                  validacao: (v) {
-                    if (v == null || v.isEmpty) return 'Informe a senha';
-                    if (v.length < 6) return 'Mínimo 6 caracteres';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    const Text('Tipo de usuário:',
-                        style: TextStyle(color: Colors.white)),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        dropdownColor: Colors.grey[900],
-                        value: _tipoUsuario,
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'aluno',
-                            child: Text('Aluno'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'personal',
-                            child: Text('Personal Trainer'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() => _tipoUsuario = value);
-                          }
-                        },
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.amber),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    onPressed: _carregando ? null : _criarConta,
-                    child: _carregando
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('CRIAR CONTA'),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Já tenho conta',
-                    style: TextStyle(color: Colors.amber),
-                  ),
-                ),
-              ],
-            ),
+                child: _carregando
+                    ? const CircularProgressIndicator()
+                    : const Text("CRIAR CONTA"),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () =>
+                    Navigator.pushReplacementNamed(context, '/login'),
+                child: const Text("Já tenho conta",
+                    style: TextStyle(color: Colors.amber)),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _campoTexto({
-    required TextEditingController controller,
-    required String label,
-    bool senha = false,
-    TextInputType teclado = TextInputType.text,
-    String? Function(String?)? validacao,
-  }) {
+  Widget _campoTexto(TextEditingController c, String label,
+      {bool senha = false, TextInputType teclado = TextInputType.text}) {
     return TextFormField(
-      controller: controller,
+      controller: c,
       obscureText: senha,
       keyboardType: teclado,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.amber),
-        filled: true,
-        fillColor: Colors.grey[900],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.amber),
-        ),
+        border: const OutlineInputBorder(),
       ),
-      validator: validacao ??
-          (value) => value == null || value.isEmpty ? 'Preencha o campo' : null,
+      validator: (v) => v == null || v.isEmpty ? "Preencha este campo" : null,
     );
   }
 }

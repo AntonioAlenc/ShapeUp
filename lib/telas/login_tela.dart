@@ -15,52 +15,41 @@ class _LoginTelaState extends State<LoginTela> {
   final _senhaController = TextEditingController();
   bool _carregando = false;
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _senhaController.dispose();
-    super.dispose();
-  }
-
   Future<void> _entrar() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _carregando = true);
 
     try {
-      final email = _emailController.text.trim();
-      final senha = _senhaController.text;
-
       final user = await AuthService.instancia.entrarEmailSenha(
-        email: email,
-        senha: senha,
+        email: _emailController.text.trim(),
+        senha: _senhaController.text.trim(),
       );
+      if (user == null) throw Exception("Falha inesperada.");
 
-      if (user == null) {
-        throw Exception('Falha inesperada no login.');
-      }
-
-      // Busca o perfil no Firestore
       final snap = await FirebaseFirestore.instance
-          .collection('users') // ⚠️ Corrigido: antes estava "usuarios"
+          .collection('users')
           .doc(user.uid)
           .get();
+
+      if (!snap.exists) throw Exception("Usuário sem perfil.");
 
       final dados = snap.data() ?? {};
       final tipo = (dados['tipo'] ?? 'aluno').toString().toLowerCase();
 
-      // Decide rota
       final rota = (tipo == 'personal') ? '/menu-personal' : '/menu-aluno';
-
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(rota);
+      Navigator.pushReplacementNamed(context, rota);
     } catch (e) {
-      // ⚠️ Corrigido: AuthService não tinha traduzErro
-      final msg = e.toString().replaceAll('Exception: ', '');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Falha no login: $msg')),
-      );
+      String msg = e.toString();
+      if (msg.contains("wrong-password")) {
+        msg = "Senha incorreta.";
+      } else if (msg.contains("user-not-found")) {
+        msg = "Usuário não encontrado.";
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
+      }
     } finally {
       if (mounted) setState(() => _carregando = false);
     }
@@ -79,113 +68,61 @@ class _LoginTelaState extends State<LoginTela> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset('imagens/LogoVazada.png', width: 150),
+                  Image.asset("imagens/LogoVazada.png", width: 150),
                   const SizedBox(height: 40),
-
-                  // E-mail
                   TextFormField(
                     controller: _emailController,
                     style: const TextStyle(color: Colors.white),
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'E-mail',
-                      labelStyle: const TextStyle(color: Colors.amber),
-                      enabledBorder: const OutlineInputBorder(
+                    decoration: const InputDecoration(
+                      labelText: "E-mail",
+                      labelStyle: TextStyle(color: Colors.amber),
+                      enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.amber),
                       ),
-                      focusedBorder: const OutlineInputBorder(
+                      focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.amber, width: 2),
                       ),
-                      prefixIcon: const Icon(Icons.email, color: Colors.amber),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Informe o e-mail';
-                      }
-                      if (!value.contains('@')) return 'E-mail inválido';
-                      return null;
-                    },
+                    validator: (v) => v == null || !v.contains("@")
+                        ? "Informe um e-mail válido"
+                        : null,
                   ),
-
                   const SizedBox(height: 16),
-
-                  // Senha
                   TextFormField(
                     controller: _senhaController,
                     style: const TextStyle(color: Colors.white),
                     obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Senha',
-                      labelStyle: const TextStyle(color: Colors.amber),
-                      enabledBorder: const OutlineInputBorder(
+                    decoration: const InputDecoration(
+                      labelText: "Senha",
+                      labelStyle: TextStyle(color: Colors.amber),
+                      enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.amber),
                       ),
-                      focusedBorder: const OutlineInputBorder(
+                      focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.amber, width: 2),
                       ),
-                      prefixIcon: const Icon(Icons.lock, color: Colors.amber),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Informe a senha';
-                      }
-                      if (value.length < 6) {
-                        return 'A senha deve ter pelo menos 6 caracteres';
-                      }
-                      return null;
-                    },
+                    validator: (v) =>
+                        v == null || v.length < 6 ? "Senha inválida" : null,
                   ),
-
-                  const SizedBox(height: 12),
-
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, '/recuperacao'),
-                      child: const Text(
-                        'Esqueci minha senha',
-                        style: TextStyle(color: Colors.amber),
-                      ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _carregando ? null : _entrar,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
+                    child: _carregando
+                        ? const CircularProgressIndicator()
+                        : const Text("ENTRAR"),
                   ),
-
                   const SizedBox(height: 16),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        textStyle: const TextStyle(fontSize: 16),
-                      ),
-                      onPressed: _carregando ? null : _entrar,
-                      child: _carregando
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('ENTRAR',
-                              style: TextStyle(color: Colors.black)),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Não tem uma conta?',
-                          style: TextStyle(color: Colors.white)),
-                      TextButton(
-                        onPressed: () =>
-                            Navigator.pushNamed(context, '/cadastro'),
-                        child: const Text('Cadastre-se',
-                            style: TextStyle(color: Colors.amber)),
-                      ),
-                    ],
+                  TextButton(
+                    onPressed: () =>
+                        Navigator.pushReplacementNamed(context, "/cadastro"),
+                    child: const Text("Criar conta",
+                        style: TextStyle(color: Colors.amber)),
                   ),
                 ],
               ),
