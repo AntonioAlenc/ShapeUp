@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'alunos_tela.dart';
+import 'perfil_personal_tela.dart';
 
 class MenuPersonalTela extends StatefulWidget {
   const MenuPersonalTela({super.key});
@@ -10,6 +12,26 @@ class MenuPersonalTela extends StatefulWidget {
 class _MenuPersonalTelaState extends State<MenuPersonalTela> {
   int _indiceSelecionado = 0;
 
+  // Lista de alunos simulada (compartilhada com a tela de início)
+  final List<Map<String, String>> _alunos = [
+    {"nome": "João Silva", "idade": "21 anos", "objetivo": "Hipertrofia"},
+    {"nome": "Maria Souza", "idade": "28 anos", "objetivo": "Emagrecimento"},
+    {"nome": "Carlos Pereira", "idade": "35 anos", "objetivo": "Condicionamento"},
+    {"nome": "Ana Lima", "idade": "24 anos", "objetivo": "Funcional"},
+    {"nome": "Lucas Silveira", "idade": "26 anos", "objetivo": "Definição"},
+    {"nome": "Larissa Xavier", "idade": "30 anos", "objetivo": "Resistência"},
+    {"nome": "Julia Menezes", "idade": "22 anos", "objetivo": "Força"},
+  ];
+
+  // Lista de avaliações simuladas
+  final List<Map<String, dynamic>> _avaliacoes = [
+    {"aluno": "João Silva", "estrelas": 4.5},
+    {"aluno": "Maria Souza", "estrelas": 5.0},
+    {"aluno": "Carlos Pereira", "estrelas": 4.0},
+    {"aluno": "Ana Lima", "estrelas": 3.5},
+    {"aluno": "Lucas Silveira", "estrelas": 4.0},
+  ];
+
   // 🔹 Lista de telas exibidas em cada aba
   late final List<Widget> _telas;
 
@@ -18,10 +40,8 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
     super.initState();
     _telas = [
       _telaInicio(context),
-      _telaTreinos(context),
-      _telaDietas(context),
-      _telaAlunos(context),
-      _telaPerfil(context),
+      const AlunosTela(),
+      const PerfilPersonalTela(),
     ];
   }
 
@@ -39,12 +59,12 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
         backgroundColor: Colors.black,
         elevation: 0,
         title: Text(
-          _indiceSelecionado == 0
-              ? "Olá, Treinador"
-              : _titulos[_indiceSelecionado],
+          _titulos[_indiceSelecionado],
           style: const TextStyle(color: Colors.white, fontSize: 20),
         ),
-        actions: const [
+        actions: _indiceSelecionado == 2
+            ? [] // no perfil já existe o avatar
+            : const [
           Padding(
             padding: EdgeInsets.only(right: 16),
             child: CircleAvatar(
@@ -67,14 +87,6 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
             label: "Início",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.fitness_center),
-            label: "Treinos",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_menu),
-            label: "Dietas",
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.group),
             label: "Alunos",
           ),
@@ -91,104 +103,136 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
   // 🔹 Títulos da AppBar
   final List<String> _titulos = [
     "Olá, Treinador",
-    "Treinos",
-    "Dietas",
     "Meus Alunos",
     "Perfil",
   ];
 
-  // 🔹 Telas simuladas
+  // 🔹 Tela inicial personalizada com cards
   Widget _telaInicio(BuildContext context) {
-    return Padding(
+    final int totalAlunos = _alunos.length;
+    final List<Map<String, String>> alunosResumo =
+    _alunos.take(4).toList(); // pega só 4 primeiros para o card
+
+    // Calculando a média de avaliações
+    final double mediaAvaliacoes =
+        _avaliacoes.fold(0.0, (sum, item) => sum + item["estrelas"]) /
+            _avaliacoes.length;
+
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          _cardMenu(
-            context,
-            titulo: "Meus Alunos",
-            icone: Icons.group,
+          // Card de Quantidade de Alunos
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.amber,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Quantia de Alunos : $totalAlunos alunos",
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const Divider(color: Colors.black),
+                const SizedBox(height: 8),
+                for (var aluno in alunosResumo) _linhaAluno(aluno["nome"]!),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () {
+                    // ação futura para ver mais alunos
+                  },
+                  child: const Text(
+                    "MAIS",
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          _cardMenu(
-            context,
-            titulo: "Treinos",
-            icone: Icons.fitness_center,
-          ),
-          const SizedBox(height: 16),
-          _cardMenu(
-            context,
-            titulo: "Dietas",
-            icone: Icons.restaurant_menu,
+          const SizedBox(height: 20),
+
+          // Card de Avaliações
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.amber,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "AVALIAÇÕES :",
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Exibindo a média de estrelas
+                Row(
+                  children: List.generate(
+                    5,
+                        (index) => Icon(
+                      index < mediaAvaliacoes
+                          ? Icons.star
+                          : Icons.star_border,
+                      color: Colors.black,
+                      size: 28,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: List.generate(
+                    4, // Exemplo de 4 alunos que fizeram avaliação
+                        (index) => const CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.black,
+                      child: Icon(Icons.person, color: Colors.amber),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _telaTreinos(BuildContext context) {
-    return const Center(
-      child: Text(
-        "Tela de Treinos",
-        style: TextStyle(color: Colors.white),
-      ),
-    );
-  }
-
-  Widget _telaDietas(BuildContext context) {
-    return const Center(
-      child: Text(
-        "Tela de Dietas",
-        style: TextStyle(color: Colors.white),
-      ),
-    );
-  }
-
-  Widget _telaAlunos(BuildContext context) {
-    return const Center(
-      child: Text(
-        "Tela de Alunos",
-        style: TextStyle(color: Colors.white),
-      ),
-    );
-  }
-
-  Widget _telaPerfil(BuildContext context) {
-    return const Center(
-      child: Text(
-        "Tela de Perfil",
-        style: TextStyle(color: Colors.white),
-      ),
-    );
-  }
-
-  // 🔹 Card do menu inicial
-  Widget _cardMenu(BuildContext context,
-      {required String titulo, required IconData icone}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.amber,
-        borderRadius: BorderRadius.circular(12),
-      ),
+  // 🔹 Linha de aluno dentro do card
+  Widget _linhaAluno(String nome) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Icon(icone, size: 28, color: Colors.black),
-              const SizedBox(width: 12),
-              Text(
-                titulo,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          const Icon(Icons.person, color: Colors.black),
+          const SizedBox(width: 8),
+          Text(
+            nome,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-          const Icon(Icons.arrow_forward_ios, color: Colors.black),
         ],
       ),
     );
