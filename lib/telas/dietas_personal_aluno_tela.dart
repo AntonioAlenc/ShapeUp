@@ -70,9 +70,9 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
             ),
             ElevatedButton(
               onPressed: () async {
-                // Salvar no Firestore a dieta, associada ao nome do aluno
+                // Salvando a dieta no Firestore
                 await dietasRef.add({
-                  'aluno': widget.nomeAluno, // Associando ao aluno
+                  'aluno': widget.nomeAluno,  // Associando à dieta do aluno
                   'refeicao': refeicaoController.text,
                   'detalhes': detalhesController.text,
                   'dataCriacao': Timestamp.now(), // Salvando a data de criação
@@ -95,7 +95,7 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
     );
   }
 
-  // Edição de dieta
+  // Função para editar dieta
   void _editarDieta(String dietaId) {
     final refeicaoController = TextEditingController();
     final detalhesController = TextEditingController();
@@ -151,12 +151,13 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
             ),
             ElevatedButton(
               onPressed: () async {
+                // Atualizando a dieta no Firestore
                 await dietasRef.doc(dietaId).update({
                   'refeicao': refeicaoController.text,
                   'detalhes': detalhesController.text,
                 });
 
-                if (mounted) Navigator.pop(context);
+                if (mounted) Navigator.pop(context); // Fecha o dialog após a atualização
               },
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.all(Colors.amber),
@@ -184,9 +185,9 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: dietasRef
-            .where('aluno', isEqualTo: widget.nomeAluno)
-            .orderBy('dataCriacao')
-            .snapshots(), // Substituímos por consulta filtrada por aluno
+            .where('aluno', isEqualTo: widget.nomeAluno) // Filtra dietas do aluno
+            .orderBy('dataCriacao') // Ordena pela data de criação
+            .snapshots(), // Observa em tempo real
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
