@@ -143,9 +143,12 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
               onPressed: () async {
                 if (refeicaoController.text.trim().isEmpty) return;
 
+                final uid = FirebaseAuth.instance.currentUser!.uid; // 🔹 mantém o personal logado
+
                 await dietasRef.doc(dietaId).update({
                   'refeicao': refeicaoController.text.trim(),
                   'detalhes': detalhesController.text.trim(),
+                  'personalId': uid, // 🔹 garante que o personalId continua no doc
                 });
 
                 refeicaoController.dispose();

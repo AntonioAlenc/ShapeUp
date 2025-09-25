@@ -182,6 +182,74 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
     );
   }
 
+  Future<void> _editarTreino(String treinoId, String nomeAtual, String descricaoAtual, List<Map<String, dynamic>> exerciciosAtuais) async {
+    final nomeController = TextEditingController(text: nomeAtual);
+    final descController = TextEditingController(text: descricaoAtual);
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[800],
+          title: const Text("Editar Treino", style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nomeController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: "Nome do treino",
+                  labelStyle: TextStyle(color: Colors.white70),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descController,
+                style: const TextStyle(color: Colors.white),
+                maxLines: null,
+                decoration: const InputDecoration(
+                  labelText: "Descrição",
+                  labelStyle: TextStyle(color: Colors.white70),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancelar", style: TextStyle(color: Colors.amber)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (nomeController.text.trim().isEmpty) return;
+
+                final uid = FirebaseAuth.instance.currentUser!.uid; // 🔹 mantém o personalId
+
+                await FirebaseFirestore.instance.collection('treinos').doc(treinoId).update({
+                  'nome': nomeController.text.trim(),
+                  'descricao': descController.text.trim(),
+                  'exercicios': exerciciosAtuais,
+                  'personalId': uid, // 🔹 garante que o personalId continua
+                });
+
+                nomeController.dispose();
+                descController.dispose();
+
+                if (mounted) Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.black,
+              ),
+              child: const Text("Salvar"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _confirmarExclusaoTreino(String treinoId) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -215,7 +283,7 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
 
   @override
   Widget build(BuildContext context) {
-    final uid = FirebaseAuth.instance.currentUser!.uid; // 🔹 pega o personal logado
+    final uid = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -234,7 +302,7 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
         stream: FirebaseFirestore.instance
             .collection('treinos')
             .where('alunoId', isEqualTo: widget.alunoId)
-            .where('personalId', isEqualTo: uid) // 🔹 garante que só veja treinos do personal logado
+            .where('personalId', isEqualTo: uid) // 🔹 garante compatibilidade com regras
             .snapshots(includeMetadataChanges: true),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -287,16 +355,25 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
                       subtitle: Text("Séries: ${ex['series'] ?? '-'}\nObs: ${ex['observacao'] ?? '-'}", style: const TextStyle(color: Colors.white70)),
                     )),
                     const Divider(color: Colors.white12),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 8, bottom: 8),
-                        child: IconButton(
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          tooltip: "Editar treino",
+                          icon: const Icon(Icons.edit, color: Colors.amber),
+                          onPressed: () => _editarTreino(
+                            treino.id,
+                            (data['nome'] ?? "").toString(),
+                            (data['descricao'] ?? "").toString(),
+                            exercicios,
+                          ),
+                        ),
+                        IconButton(
                           tooltip: "Excluir treino",
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () => _confirmarExclusaoTreino(treino.id),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
