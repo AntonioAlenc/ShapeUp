@@ -5,7 +5,7 @@ class Treino {
   final String nome;
   final String descricao;
   final String frequencia; // ex.: "3x por semana"
-  final List<String> exercicios; // lista de nomes
+  final List<Map<String, dynamic>> exercicios; // lista com nome, séries, observação
   final String personalId; // uid do personal criador
   final String? alunoId; // uid do aluno atribuído (pode ser null)
   final DateTime criadoEm;
@@ -28,7 +28,7 @@ class Treino {
     required String nome,
     required String descricao,
     required String frequencia,
-    required List<String> exercicios,
+    required List<Map<String, dynamic>> exercicios,
     required String personalId,
     String? alunoId,
   }) {
@@ -51,16 +51,16 @@ class Treino {
       'nome': nome,
       'descricao': descricao,
       'frequencia': frequencia,
-      'exercicios': exercicios,
+      'exercicios': exercicios, // já é lista de Map
       'personalId': personalId,
       'alunoId': alunoId,
       'criadoEm': Timestamp.fromDate(criadoEm),
       'atualizadoEm':
-          atualizadoEm != null ? Timestamp.fromDate(atualizadoEm!) : null,
+      atualizadoEm != null ? Timestamp.fromDate(atualizadoEm!) : null,
     };
   }
 
-  // Criar treino a parttir de um documento do Firestore
+  // Criar treino a partir de um documento do Firestore
   factory Treino.fromDoc(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return Treino(
@@ -68,7 +68,10 @@ class Treino {
       nome: data['nome'] ?? '',
       descricao: data['descricao'] ?? '',
       frequencia: data['frequencia'] ?? '',
-      exercicios: (data['exercicios'] as List?)?.cast<String>() ?? const [],
+      exercicios: (data['exercicios'] as List?)
+          ?.map((e) => Map<String, dynamic>.from(e))
+          .toList() ??
+          [],
       personalId: data['personalId'] ?? '',
       alunoId: data['alunoId'],
       criadoEm: (data['criadoEm'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -82,7 +85,7 @@ class Treino {
     String? nome,
     String? descricao,
     String? frequencia,
-    List<String>? exercicios,
+    List<Map<String, dynamic>>? exercicios,
     String? personalId,
     String? alunoId,
     DateTime? criadoEm,

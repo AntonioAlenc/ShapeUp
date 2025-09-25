@@ -15,8 +15,10 @@ class _TreinoCriarTelaState extends State<TreinoCriarTela> {
   final _nome = TextEditingController();
   final _desc = TextEditingController();
   final _freq = TextEditingController();
-  final _exercicios = TextEditingController(); // separados por vírgula
   Treino? _edicao;
+
+  // lista dinâmica de exercícios
+  List<Map<String, TextEditingController>> _exerciciosControllers = [];
 
   @override
   void didChangeDependencies() {
@@ -27,7 +29,15 @@ class _TreinoCriarTelaState extends State<TreinoCriarTela> {
       _nome.text = arg.nome;
       _desc.text = arg.descricao;
       _freq.text = arg.frequencia;
-      _exercicios.text = arg.exercicios.join(', ');
+
+      // carregar exercícios do treino em edição
+      _exerciciosControllers = arg.exercicios.map((ex) {
+        return {
+          "nome": TextEditingController(text: ex["nome"] ?? ""),
+          "series": TextEditingController(text: ex["series"] ?? ""),
+          "obs": TextEditingController(text: ex["observacao"] ?? ""),
+        };
+      }).toList();
     }
   }
 
@@ -36,7 +46,11 @@ class _TreinoCriarTelaState extends State<TreinoCriarTela> {
     _nome.dispose();
     _desc.dispose();
     _freq.dispose();
-    _exercicios.dispose();
+    for (var ex in _exerciciosControllers) {
+      ex["nome"]?.dispose();
+      ex["series"]?.dispose();
+      ex["obs"]?.dispose();
+    }
     super.dispose();
   }
 
@@ -45,11 +59,14 @@ class _TreinoCriarTelaState extends State<TreinoCriarTela> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    final listaEx = _exercicios.text
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
+    // converter controllers em lista de maps
+    final listaEx = _exerciciosControllers.map((ex) {
+      return {
+        "nome": ex["nome"]!.text.trim(),
+        "series": ex["series"]!.text.trim(),
+        "observacao": ex["obs"]!.text.trim(),
+      };
+    }).where((ex) => ex["nome"]!.isNotEmpty).toList();
 
     if (_edicao == null) {
       final novo = Treino.novo(
@@ -83,15 +100,15 @@ class _TreinoCriarTelaState extends State<TreinoCriarTela> {
   }
 
   InputDecoration _dec(String label) => InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Colors.amber),
-        enabledBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.amber),
-        ),
-        focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.amber, width: 2),
-        ),
-      );
+    labelText: label,
+    labelStyle: const TextStyle(color: Colors.amber),
+    enabledBorder: const OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.amber),
+    ),
+    focusedBorder: const OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.amber, width: 2),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -108,39 +125,105 @@ class _TreinoCriarTelaState extends State<TreinoCriarTela> {
           child: ListView(
             children: [
               TextFormField(
-                controller: _nome, style: const TextStyle(color: Colors.white),
+                controller: _nome,
+                style: const TextStyle(color: Colors.white),
                 decoration: _dec('Nome do treino'),
                 validator: (v) =>
-                    v == null || v.isEmpty ? 'Informe o nome' : null,
+                v == null || v.isEmpty ? 'Informe o nome' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
-                controller: _desc, style: const TextStyle(color: Colors.white),
+                controller: _desc,
+                style: const TextStyle(color: Colors.white),
                 decoration: _dec('Descrição'),
                 maxLines: 3,
               ),
               const SizedBox(height: 12),
               TextFormField(
-                controller: _freq, style: const TextStyle(color: Colors.white),
+                controller: _freq,
+                style: const TextStyle(color: Colors.white),
                 decoration: _dec('Frequência (ex.: 3x por semana)'),
                 validator: (v) =>
-                    v == null || v.isEmpty ? 'Informe a frequência' : null,
+                v == null || v.isEmpty ? 'Informe a frequência' : null,
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _exercicios, style: const TextStyle(color: Colors.white),
-                decoration: _dec('Exercícios (separados por vírgula)'),
-                maxLines: 2,
-                validator: (v) => v == null || v.isEmpty
-                    ? 'Informe ao menos 1 exercício'
-                    : null,
+              const SizedBox(height: 16),
+              const Text(
+                "Exercícios",
+                style: TextStyle(color: Colors.amber, fontSize: 18),
+              ),
+              const SizedBox(height: 8),
+              Column(
+                children: _exerciciosControllers.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final ex = entry.value;
+                  return Card(
+                    color: Colors.grey[900],
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: ex["nome"],
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _dec("Nome do exercício"),
+                            validator: (v) => v == null || v.isEmpty
+                                ? "Informe o nome"
+                                : null,
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: ex["series"],
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _dec("Séries (ex.: 3x12)"),
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: ex["obs"],
+                            style: const TextStyle(color: Colors.white),
+                            decoration: _dec("Observação"),
+                          ),
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () {
+                                setState(() {
+                                  _exerciciosControllers.removeAt(i);
+                                });
+                              },
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _exerciciosControllers.add({
+                      "nome": TextEditingController(),
+                      "series": TextEditingController(),
+                      "obs": TextEditingController(),
+                    });
+                  });
+                },
+                icon: const Icon(Icons.add, color: Colors.amber),
+                label: const Text("Adicionar exercício",
+                    style: TextStyle(color: Colors.amber)),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: _salvar,  style: ElevatedButton.styleFrom( backgroundColor: Colors.amber,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
+                onPressed: _salvar,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
                 child: Text(editando ? 'Salvar alterações' : 'Criar treino'),
               ),
             ],

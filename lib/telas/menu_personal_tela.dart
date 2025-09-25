@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'alunos_tela.dart';
 import 'perfil_personal_tela.dart';
+import 'vincular_aluno_tela.dart'; // 🔹 importar a tela de vinculação
+
 
 class MenuPersonalTela extends StatefulWidget {
   const MenuPersonalTela({super.key});
@@ -122,6 +124,47 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          // Card de Gerenciar Alunos
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 20),
+            decoration: BoxDecoration(
+              color: Colors.amber,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  "Gerenciar Alunos",
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const VincularAlunoTela(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.amber,
+                  ),
+                  icon: const Icon(Icons.person_add),
+                  label: const Text("Vincular Alunos"),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+
           // Card de Quantidade de Alunos
           Container(
             width: double.infinity,
@@ -184,7 +227,6 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                // Exibindo a média de estrelas
                 Row(
                   children: List.generate(
                     5,
@@ -201,7 +243,7 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: List.generate(
-                    4, // Exemplo de 4 alunos que fizeram avaliação
+                    4,
                         (index) => const CircleAvatar(
                       radius: 20,
                       backgroundColor: Colors.black,
@@ -217,7 +259,6 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
     );
   }
 
-  // 🔹 Linha de aluno dentro do card
   Widget _linhaAluno(String nome) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -238,4 +279,3 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
     );
   }
 }
-//att

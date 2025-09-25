@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'aluno_detalhes_tela.dart';
 
@@ -6,12 +8,18 @@ class AlunosTela extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final alunos = [
-      {"nome": "João Silva", "idade": "21 anos", "objetivo": "Hipertrofia"},
-      {"nome": "Maria Souza", "idade": "28 anos", "objetivo": "Emagrecimento"},
-      {"nome": "Carlos Pereira", "idade": "35 anos", "objetivo": "Condicionamento"},
-      {"nome": "Ana Lima", "idade": "24 anos", "objetivo": "Funcional"},
-    ];
+    final personalId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (personalId == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text(
+            "Não autenticado",
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -21,44 +29,95 @@ class AlunosTela extends StatelessWidget {
         foregroundColor: Colors.amber,
         centerTitle: true,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: alunos.length,
-        itemBuilder: (context, index) {
-          final aluno = alunos[index];
-          return Card(
-            color: Colors.grey[900],
-            margin: const EdgeInsets.only(bottom: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: Colors.amber,
-                child: Icon(Icons.person, color: Colors.black),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .where('tipo', isEqualTo: 'aluno')
+            .where('personalId', isEqualTo: personalId)
+            .snapshots(includeMetadataChanges: true), // 🔹 sem orderBy p/ evitar índice
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snap.hasError) {
+            return const Center(
+              child: Text(
+                "Erro ao carregar alunos",
+                style: TextStyle(color: Colors.white),
               ),
-              title: Text(
-                aluno["nome"]!,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            );
+          }
+
+          var docs = snap.data?.docs ?? [];
+
+          // 🔹 ordena os alunos pelo nome no Flutter
+          docs.sort((a, b) {
+            final nomeA = (a['nome'] ?? '').toString();
+            final nomeB = (b['nome'] ?? '').toString();
+            return nomeA.compareTo(nomeB);
+          });
+
+          if (docs.isEmpty) {
+            return const Center(
+              child: Text(
+                "Nenhum aluno vinculado",
+                style: TextStyle(color: Colors.white),
               ),
-              subtitle: Text(
-                "${aluno["idade"]} • ${aluno["objetivo"]}",
-                style: const TextStyle(color: Colors.white70),
-              ),
-              trailing: const Icon(Icons.arrow_forward_ios, color: Colors.amber),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AlunoDetalhesTela(nomeAluno: aluno["nome"]!),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: docs.length,
+            itemBuilder: (context, index) {
+              final alunoDoc = docs[index];
+              final aluno = alunoDoc.data() as Map<String, dynamic>;
+              final nome = aluno["nome"] ?? "Aluno sem nome";
+              final idade = aluno["idade"]?.toString() ?? "-";
+              final objetivo = aluno["objetivo"] ?? "-";
+              final alunoId = alunoDoc.id; // 🔹 pegamos o ID do documento
+
+              return Card(
+                color: Colors.grey[900],
+                margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.amber,
+                    child: Icon(Icons.person, color: Colors.black),
                   ),
-                );
-              },
-            ),
+                  title: Text(
+                    nome,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: Text(
+                    "$idade • $objetivo",
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.amber),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AlunoDetalhesTela(
+                          nomeAluno: nome,
+                          alunoId: alunoId, // 🔹 passamos o ID aqui
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
           );
         },
       ),
     );
   }
 }
-//att

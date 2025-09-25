@@ -71,12 +71,12 @@ class TreinoAlunoTela extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // Lista de exercícios
+          // Lista de exercícios (nome, séries, obs)
           ...t.exercicios.map(
                 (e) => Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Text(
-                e,
+                "${e['nome'] ?? ''} - ${e['series'] ?? ''}\nObs: ${e['observacao'] ?? ''}",
                 style: const TextStyle(color: Colors.white70),
               ),
             ),
@@ -89,7 +89,7 @@ class TreinoAlunoTela extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: ElevatedButton(
               onPressed: () {
-                // 🔹 Futuro: aqui podemos salvar no Firestore "concluidoEm"
+                // 🔹 Futuro: salvar no Firestore "concluidoEm"
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Treino "${t.nome}" finalizado!')),
                 );

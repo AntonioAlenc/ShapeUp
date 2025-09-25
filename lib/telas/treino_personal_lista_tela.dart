@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../modelos/treino.dart';
 import '../servicos/treino_service.dart';
+import 'treino_detalhe_tela.dart'; // 🔹 import necessário
 
 class TreinoPersonalListaTela extends StatelessWidget {
   const TreinoPersonalListaTela({super.key});
@@ -29,8 +30,10 @@ class TreinoPersonalListaTela extends StatelessWidget {
 
           if (lista.isEmpty) {
             return const Center(
-              child: Text('Nenhum treino criado',
-                  style: TextStyle(color: Colors.white)),
+              child: Text(
+                'Nenhum treino criado',
+                style: TextStyle(color: Colors.white),
+              ),
             );
           }
 
@@ -40,10 +43,16 @@ class TreinoPersonalListaTela extends StatelessWidget {
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (context, i) {
               final t = lista[i];
-              return Card(color: Colors.grey[900],
+              return Card(
+                color: Colors.grey[900],
                 child: ListTile(
-                  title: Text(t.nome,style: const TextStyle(color: Colors.amber)),
-                  subtitle: Text('${t.frequencia} • ${t.exercicios.length} exercícios', style: const TextStyle(color: Colors.white70),
+                  title: Text(
+                    t.nome,
+                    style: const TextStyle(color: Colors.amber),
+                  ),
+                  subtitle: Text(
+                    '${t.frequencia} • ${t.exercicios.length} exercícios',
+                    style: const TextStyle(color: Colors.white70),
                   ),
                   trailing: PopupMenuButton<String>(
                     onSelected: (v) async {
@@ -69,7 +78,14 @@ class TreinoPersonalListaTela extends StatelessWidget {
                       PopupMenuItem(value: 'excluir', child: Text('Excluir')),
                     ],
                   ),
-                  onTap: () => Navigator.pushNamed(context, '/treino-criar', arguments: t),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TreinoDetalheTela(treino: t),
+                      ),
+                    );
+                  },
                 ),
               );
             },

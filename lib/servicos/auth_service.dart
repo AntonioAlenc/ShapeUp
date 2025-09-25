@@ -29,16 +29,35 @@ class AuthService {
 
       final uid = cred.user!.uid;
 
-      // salva no Firestore
-      await _db.collection('users').doc(uid).set({
+      // base comum para todos os usuários
+      final baseData = {
         'nome': nome,
         'email': email,
         'tipo': tipoUsuario,
+        'createdAt': FieldValue.serverTimestamp(),
         'idade': null,
         'peso': null,
         'altura': null,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+        'fotoUrl': null,
+      };
+
+      if (tipoUsuario == 'aluno') {
+        await _db.collection('users').doc(uid).set({
+          ...baseData,
+          'sexo': null,
+          'objetivo': null,
+          'personalId': null, // 🔹 aluno sempre começa sem personal vinculado
+        });
+      } else if (tipoUsuario == 'personal') {
+        await _db.collection('users').doc(uid).set({
+          ...baseData,
+          'telefone': null,
+          'especialidade': null,
+        });
+      } else {
+        // fallback genérico
+        await _db.collection('users').doc(uid).set(baseData);
+      }
 
       return cred.user;
     } on FirebaseAuthException catch (e) {

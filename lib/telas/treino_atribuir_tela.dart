@@ -10,8 +10,11 @@ class TreinoAtribuirTela extends StatelessWidget {
   Widget build(BuildContext context) {
     final arg = ModalRoute.of(context)?.settings.arguments;
     if (arg is! Treino) {
-      return const Scaffold(body: Center(child: Text('Treino inválido', style: TextStyle(color: Colors.white
-            ),
+      return const Scaffold(
+        body: Center(
+          child: Text(
+            'Treino inválido',
+            style: TextStyle(color: Colors.white),
           ),
         ),
       );
@@ -33,11 +36,11 @@ class TreinoAtribuirTela extends StatelessWidget {
           final docs = snap.data?.docs ?? [];
           if (docs.isEmpty) {
             return const Center(
-              child: Text('Nenhum aluno cadastrado',
-                  style: TextStyle(color: Colors.white
-                  ),
-                ),
-              );
+              child: Text(
+                'Nenhum aluno cadastrado',
+                style: TextStyle(color: Colors.white),
+              ),
+            );
           }
           return ListView.separated(
             padding: const EdgeInsets.all(12),
@@ -53,12 +56,17 @@ class TreinoAtribuirTela extends StatelessWidget {
               return Card(
                 color: Colors.grey[900],
                 child: ListTile(
-                  title: Text(nome.toString(), style: TextStyle( color: jaAtribuido ? Colors.green : Colors.white,
-                    fontWeight: jaAtribuido ? FontWeight.bold : FontWeight.normal,
+                  title: Text(
+                    nome.toString(),
+                    style: TextStyle(
+                      color: jaAtribuido ? Colors.green : Colors.white,
+                      fontWeight:
+                      jaAtribuido ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
-                  subtitle: Text(alunoId, style: const TextStyle(color: Colors.white70
-                    ),
+                  subtitle: Text(
+                    "ID: $alunoId",
+                    style: const TextStyle(color: Colors.white70),
                   ),
                   trailing: jaAtribuido
                       ? const Icon(Icons.check_circle, color: Colors.green)
@@ -68,7 +76,11 @@ class TreinoAtribuirTela extends StatelessWidget {
                         .atribuirTreino(treino.id, alunoId);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Treino atribuído a $nome')),
+                        SnackBar(
+                          content: Text(
+                            'Treino "${treino.nome}" atribuído a $nome',
+                          ),
+                        ),
                       );
                       Navigator.pop(context);
                     }
