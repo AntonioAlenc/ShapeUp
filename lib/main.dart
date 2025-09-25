@@ -30,6 +30,7 @@ import 'telas/treino_personal_lista_tela.dart';
 import 'telas/dieta_personal_tela.dart';
 import 'telas/alunos_tela.dart';
 
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
