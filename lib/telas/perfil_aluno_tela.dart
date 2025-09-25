@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'personalizacao_dados_perfil_aluno.dart';
 
 class PerfilAlunoTela extends StatelessWidget {
   const PerfilAlunoTela({super.key});
@@ -143,6 +144,36 @@ class PerfilAlunoTela extends StatelessWidget {
 
                 const SizedBox(height: 24),
 
+                // 🔹 Botão Editar Dados
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PersonalizacaoDadosPerfilAluno(),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.amber,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.edit),
+                    label: const Text(
+                      "Editar Dados",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
                 // 🔹 Botão de sair
                 SizedBox(
                   width: double.infinity,
@@ -203,4 +234,3 @@ class _infoItem extends StatelessWidget {
     );
   }
 }
-//att

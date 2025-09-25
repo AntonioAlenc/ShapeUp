@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 // importe suas telas reais
 import 'treino_aluno_tela.dart';
@@ -15,6 +19,7 @@ class MenuAlunoTela extends StatefulWidget {
 
 class _MenuAlunoTelaState extends State<MenuAlunoTela> {
   int _indiceSelecionado = 0;
+  String? numeroPersonal;
 
   // 🔹 valores simulados do progresso mensal
   final Map<String, double> valores = {
@@ -24,7 +29,68 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela> {
     "Abr": 25.0,
   };
 
+  @override
+  void initState() {
+    super.initState();
+    _buscarNumeroPersonal();
+  }
+
+  Future<void> _buscarNumeroPersonal() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final alunoDoc =
+    await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+    if (alunoDoc.exists && alunoDoc.data()?['personalId'] != null) {
+      final personalId = alunoDoc['personalId'];
+      final personalDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(personalId)
+          .get();
+
+      if (personalDoc.exists && personalDoc.data()?['telefone'] != null) {
+        setState(() {
+          numeroPersonal = personalDoc['telefone'];
+        });
+      }
+    }
+  }
+
+  Future<void> _abrirWhatsApp() async {
+    if (numeroPersonal == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Seu personal não possui telefone cadastrado."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Remove espaços e traços do número
+    String numeroFormatado =
+    numeroPersonal!.replaceAll(' ', '').replaceAll('-', '');
+
+    final Uri url = Uri.parse("https://wa.me/$numeroFormatado");
+
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Não foi possível abrir o WhatsApp."),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   void _onItemTapped(int index) {
+    if (index == 5) {
+      // 🔹 índice do WhatsApp
+      _abrirWhatsApp();
+      return; // não troca de tela
+    }
+
     setState(() {
       _indiceSelecionado = index;
     });
@@ -94,6 +160,10 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela> {
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: "Perfil",
+          ),
+          BottomNavigationBarItem(
+            icon: FaIcon(FontAwesomeIcons.whatsapp, color: Colors.green),
+            label: "WhatsApp",
           ),
         ],
         onTap: _onItemTapped,
@@ -246,4 +316,3 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela> {
     );
   }
 }
-//att

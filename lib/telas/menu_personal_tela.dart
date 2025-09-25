@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'alunos_tela.dart';
 import 'perfil_personal_tela.dart';
-import 'vincular_aluno_tela.dart'; // 🔹 importar a tela de vinculação
-
+import 'vincular_aluno_tela.dart';
 
 class MenuPersonalTela extends StatefulWidget {
   const MenuPersonalTela({super.key});
@@ -14,18 +16,7 @@ class MenuPersonalTela extends StatefulWidget {
 class _MenuPersonalTelaState extends State<MenuPersonalTela> {
   int _indiceSelecionado = 0;
 
-  // Lista de alunos simulada (compartilhada com a tela de início)
-  final List<Map<String, String>> _alunos = [
-    {"nome": "João Silva", "idade": "21 anos", "objetivo": "Hipertrofia"},
-    {"nome": "Maria Souza", "idade": "28 anos", "objetivo": "Emagrecimento"},
-    {"nome": "Carlos Pereira", "idade": "35 anos", "objetivo": "Condicionamento"},
-    {"nome": "Ana Lima", "idade": "24 anos", "objetivo": "Funcional"},
-    {"nome": "Lucas Silveira", "idade": "26 anos", "objetivo": "Definição"},
-    {"nome": "Larissa Xavier", "idade": "30 anos", "objetivo": "Resistência"},
-    {"nome": "Julia Menezes", "idade": "22 anos", "objetivo": "Força"},
-  ];
-
-  // Lista de avaliações simuladas
+  // 🔹 Lista de avaliações simuladas (mantida por enquanto)
   final List<Map<String, dynamic>> _avaliacoes = [
     {"aluno": "João Silva", "estrelas": 4.5},
     {"aluno": "Maria Souza", "estrelas": 5.0},
@@ -34,7 +25,6 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
     {"aluno": "Lucas Silveira", "estrelas": 4.0},
   ];
 
-  // 🔹 Lista de telas exibidas em cada aba
   late final List<Widget> _telas;
 
   @override
@@ -65,7 +55,7 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
           style: const TextStyle(color: Colors.white, fontSize: 20),
         ),
         actions: _indiceSelecionado == 2
-            ? [] // no perfil já existe o avatar
+            ? []
             : const [
           Padding(
             padding: EdgeInsets.only(right: 16),
@@ -102,23 +92,25 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
     );
   }
 
-  // 🔹 Títulos da AppBar
   final List<String> _titulos = [
     "Olá, Treinador",
     "Meus Alunos",
     "Perfil",
   ];
 
-  // 🔹 Tela inicial personalizada com cards
+  // 🔹 Tela inicial do personal
   Widget _telaInicio(BuildContext context) {
-    final int totalAlunos = _alunos.length;
-    final List<Map<String, String>> alunosResumo =
-    _alunos.take(4).toList(); // pega só 4 primeiros para o card
-
-    // Calculando a média de avaliações
+    // média das avaliações simuladas
     final double mediaAvaliacoes =
         _avaliacoes.fold(0.0, (sum, item) => sum + item["estrelas"]) /
             _avaliacoes.length;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const Center(
+        child: Text("Não autenticado", style: TextStyle(color: Colors.white)),
+      );
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -160,50 +152,87 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
                   icon: const Icon(Icons.person_add),
                   label: const Text("Vincular Alunos"),
                 ),
-                const SizedBox(height: 8),
               ],
             ),
           ),
 
-          // Card de Quantidade de Alunos
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.amber,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Quantia de Alunos : $totalAlunos alunos",
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+          // 🔹 Card de Quantidade de Alunos (dinâmico do Firestore)
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .where('personalId', isEqualTo: user.uid)
+                .where('tipo', isEqualTo: 'aluno')
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-                const Divider(color: Colors.black),
-                const SizedBox(height: 8),
-                for (var aluno in alunosResumo) _linhaAluno(aluno["nome"]!),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () {
-                    // ação futura para ver mais alunos
-                  },
                   child: const Text(
-                    "MAIS",
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      decoration: TextDecoration.underline,
-                    ),
+                    "Nenhum aluno vinculado",
+                    style: TextStyle(color: Colors.black),
                   ),
+                );
+              }
+
+              final alunos = snapshot.data!.docs;
+              final totalAlunos = alunos.length;
+              final alunosResumo = alunos.take(4).toList();
+
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.amber,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
-            ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Quantia de Alunos : $totalAlunos alunos",
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const Divider(color: Colors.black),
+                    const SizedBox(height: 8),
+                    for (var aluno in alunosResumo)
+                      _linhaAluno(aluno['nome'] ?? "Sem nome"),
+                    if (totalAlunos > 4)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: GestureDetector(
+                          onTap: () {
+                            // 👉 abre a aba "Alunos"
+                            setState(() {
+                              _indiceSelecionado = 1;
+                            });
+                          },
+                          child: const Text(
+                            "MAIS",
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
           ),
           const SizedBox(height: 20),
 
