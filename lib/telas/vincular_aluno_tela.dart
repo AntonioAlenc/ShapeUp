@@ -12,11 +12,13 @@ class VincularAlunoTela extends StatefulWidget {
 class _VincularAlunoTelaState extends State<VincularAlunoTela> {
   final _formKey = GlobalKey<FormState>();
   final _uidAlunoController = TextEditingController();
+  final _objetivoController = TextEditingController(); // 🔹 novo campo
   bool _carregando = false;
 
   @override
   void dispose() {
     _uidAlunoController.dispose();
+    _objetivoController.dispose();
     super.dispose();
   }
 
@@ -27,11 +29,13 @@ class _VincularAlunoTelaState extends State<VincularAlunoTela> {
     if (personalId == null) return;
 
     final uidAluno = _uidAlunoController.text.trim();
+    final objetivo = _objetivoController.text.trim();
 
     setState(() => _carregando = true);
 
     try {
-      final docRef = FirebaseFirestore.instance.collection('users').doc(uidAluno);
+      final docRef =
+      FirebaseFirestore.instance.collection('users').doc(uidAluno);
       final doc = await docRef.get();
 
       if (!doc.exists || (doc.data()?['tipo'] != 'aluno')) {
@@ -40,11 +44,12 @@ class _VincularAlunoTelaState extends State<VincularAlunoTela> {
 
       await docRef.update({
         'personalId': personalId,
+        if (objetivo.isNotEmpty) 'objetivo': objetivo, // 🔹 atualiza objetivo
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Aluno vinculado com sucesso!')),
+          const SnackBar(content: Text('Aluno vinculado com sucesso!')),
         );
         Navigator.pop(context);
       }
@@ -74,6 +79,7 @@ class _VincularAlunoTelaState extends State<VincularAlunoTela> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Vincular Aluno")),
+      backgroundColor: Colors.black,
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -87,9 +93,16 @@ class _VincularAlunoTelaState extends State<VincularAlunoTela> {
                 validator: (v) =>
                 v == null || v.isEmpty ? "Digite o UID do aluno" : null,
               ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _objetivoController,
+                style: const TextStyle(color: Colors.white),
+                decoration: _dec("Objetivo do Aluno"),
+                validator: (v) => null, // objetivo é opcional
+              ),
               const SizedBox(height: 20),
               _carregando
-                  ? const CircularProgressIndicator()
+                  ? const CircularProgressIndicator(color: Colors.amber)
                   : ElevatedButton(
                 onPressed: _vincularAluno,
                 style: ElevatedButton.styleFrom(

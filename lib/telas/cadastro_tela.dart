@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../servicos/auth_service.dart';
 
 class CadastroTela extends StatefulWidget {
@@ -15,10 +16,48 @@ class _CadastroTelaState extends State<CadastroTela> {
   final _senhaController = TextEditingController();
   String _tipoUsuario = 'aluno';
   bool _carregando = false;
-  bool _aceitouTermos = false; // 🔹 novo controle do checkbox
+  bool _aceitouTermos = false; // 🔹 controle do checkbox
+
+  DateTime? _dataNascimento; // 🔹 nova variável
+
+  Future<void> _selecionarDataNascimento() async {
+    final selecionada = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2000, 1, 1),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Colors.amber,     // destaque (OK, seleção, mês/ano)
+              onPrimary: Colors.black,   // texto em cima do primary
+              surface: Colors.black,     // fundo principal
+              onSurface: Colors.white,   // texto normal
+            ),
+            dialogBackgroundColor: Colors.grey, // fundo da caixa
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (selecionada != null) {
+      setState(() {
+        _dataNascimento = selecionada;
+      });
+    }
+  }
 
   Future<void> _criarConta() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_dataNascimento == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Selecione a data de nascimento."),
+      ));
+      return;
+    }
 
     if (!_aceitouTermos) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -35,6 +74,7 @@ class _CadastroTelaState extends State<CadastroTela> {
         email: _emailController.text.trim(),
         senha: _senhaController.text.trim(),
         tipoUsuario: _tipoUsuario,
+        dataNascimento: _dataNascimento, // 🔹 envio para o AuthService
       );
 
       if (mounted) {
@@ -84,7 +124,7 @@ class _CadastroTelaState extends State<CadastroTela> {
       body: SafeArea(
         child: Column(
           children: [
-            // 🔹 Topo amarelo com título
+            // 🔹 Topo amarelo
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -177,6 +217,22 @@ class _CadastroTelaState extends State<CadastroTela> {
                           },
                         ),
                         const SizedBox(height: 16),
+
+                        // 🔹 Data de nascimento
+                        InkWell(
+                          onTap: _selecionarDataNascimento,
+                          child: InputDecorator(
+                            decoration: _dec("Data de Nascimento", Icons.cake),
+                            child: Text(
+                              _dataNascimento == null
+                                  ? "Selecione a data"
+                                  : "${_dataNascimento!.day}/${_dataNascimento!.month}/${_dataNascimento!.year}",
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
                         DropdownButtonFormField<String>(
                           value: _tipoUsuario,
                           dropdownColor: Colors.black,
@@ -298,4 +354,3 @@ class _CadastroTelaState extends State<CadastroTela> {
     );
   }
 }
-//att

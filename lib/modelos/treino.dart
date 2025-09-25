@@ -4,10 +4,10 @@ class Treino {
   final String id;
   final String nome;
   final String descricao;
-  final String frequencia; // ex.: "3x por semana"
-  final List<Map<String, dynamic>> exercicios; // lista com nome, séries, observação
-  final String personalId; // uid do personal criador
-  final String? alunoId; // uid do aluno atribuído (pode ser null)
+  final String frequencia;
+  final List<Map<String, dynamic>> exercicios;
+  final String personalId;
+  final String? alunoId;
   final DateTime criadoEm;
   final DateTime? atualizadoEm;
 
@@ -23,7 +23,6 @@ class Treino {
     this.atualizadoEm,
   });
 
-  // Criar um treino novo (sem ID ainda)
   factory Treino.novo({
     required String nome,
     required String descricao,
@@ -45,22 +44,20 @@ class Treino {
     );
   }
 
-  // Converter para Map (para salvar no Firestore)
   Map<String, dynamic> toMap() {
     return {
       'nome': nome,
       'descricao': descricao,
       'frequencia': frequencia,
-      'exercicios': exercicios, // já é lista de Map
+      'exercicios': exercicios,
       'personalId': personalId,
       'alunoId': alunoId,
-      'criadoEm': Timestamp.fromDate(criadoEm),
+      'dataCriacao': Timestamp.fromDate(criadoEm), // 🔹 padronizado
       'atualizadoEm':
       atualizadoEm != null ? Timestamp.fromDate(atualizadoEm!) : null,
     };
   }
 
-  // Criar treino a partir de um documento do Firestore
   factory Treino.fromDoc(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return Treino(
@@ -74,12 +71,14 @@ class Treino {
           [],
       personalId: data['personalId'] ?? '',
       alunoId: data['alunoId'],
-      criadoEm: (data['criadoEm'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      // 🔹 compatível com campos antigos (dataCriacao ou criadoEm)
+      criadoEm: (data['dataCriacao'] as Timestamp?)?.toDate() ??
+          (data['criadoEm'] as Timestamp?)?.toDate() ??
+          DateTime.now(),
       atualizadoEm: (data['atualizadoEm'] as Timestamp?)?.toDate(),
     );
   }
 
-  // Criar uma cópia com alteração
   Treino copyWith({
     String? id,
     String? nome,

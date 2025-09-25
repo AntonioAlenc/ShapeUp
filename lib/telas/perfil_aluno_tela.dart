@@ -13,6 +13,16 @@ class PerfilAlunoTela extends StatelessWidget {
     }
   }
 
+  int _calcularIdade(DateTime nascimento) {
+    final hoje = DateTime.now();
+    int idade = hoje.year - nascimento.year;
+    if (hoje.month < nascimento.month ||
+        (hoje.month == nascimento.month && hoje.day < nascimento.day)) {
+      idade--;
+    }
+    return idade;
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -44,6 +54,17 @@ class PerfilAlunoTela extends StatelessWidget {
         final aluno = snap.data!.data() as Map<String, dynamic>;
         final personalId = aluno["personalId"];
 
+        // 🔹 Tratamento da data de nascimento
+        String dataNascimentoTexto = "-";
+        String idadeTexto = "-";
+        if (aluno["dataNascimento"] != null) {
+          final ts = aluno["dataNascimento"] as Timestamp;
+          final nascimento = ts.toDate();
+          dataNascimentoTexto =
+          "${nascimento.day.toString().padLeft(2, '0')}/${nascimento.month.toString().padLeft(2, '0')}/${nascimento.year}";
+          idadeTexto = _calcularIdade(nascimento).toString();
+        }
+
         return Center(
           child: Container(
             width: double.infinity,
@@ -59,7 +80,9 @@ class PerfilAlunoTela extends StatelessWidget {
               children: [
                 _infoItem("Nome:", aluno["nome"] ?? "-"),
                 _infoItem("Sexo:", aluno["sexo"] ?? "-"),
-                _infoItem("Idade:", aluno["idade"]?.toString() ?? "-"),
+                _infoItem("Objetivo:", aluno["objetivo"] ?? "-"),
+                _infoItem("Data Nasc.:", dataNascimentoTexto),
+                _infoItem("Idade:", idadeTexto),
                 _infoItem("Altura:", aluno["altura"]?.toString() ?? "-"),
                 _infoItem("Peso:", aluno["peso"]?.toString() ?? "-"),
                 _infoItem("Idioma:", aluno["idioma"] ?? "PT-BR"),

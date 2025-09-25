@@ -18,14 +18,11 @@ class _PersonalizacaoDadosPerfilAlunoState
 
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _sexoController = TextEditingController();
-  final TextEditingController _idadeController = TextEditingController();
   final TextEditingController _alturaController = TextEditingController();
   final TextEditingController _pesoController = TextEditingController();
   final TextEditingController _idiomaController = TextEditingController();
 
   // 🔹 Máscaras
-  final _idadeMask =
-  MaskTextInputFormatter(mask: "###", filter: {"#": RegExp(r'[0-9]')});
   final _alturaMask =
   MaskTextInputFormatter(mask: "#.##", filter: {"#": RegExp(r'[0-9]')});
   final _pesoMask =
@@ -52,7 +49,6 @@ class _PersonalizacaoDadosPerfilAlunoState
       setState(() {
         _nomeController.text = aluno['nome'] ?? '';
         _sexoController.text = aluno['sexo'] ?? '';
-        _idadeController.text = aluno['idade']?.toString() ?? '';
         _alturaController.text = aluno['altura']?.toString() ?? '';
         _pesoController.text = aluno['peso']?.toString() ?? '';
         _idiomaController.text = aluno['idioma'] ?? 'PT-BR';
@@ -60,7 +56,6 @@ class _PersonalizacaoDadosPerfilAlunoState
         _dadosOriginais = {
           'nome': _nomeController.text,
           'sexo': _sexoController.text,
-          'idade': _idadeController.text,
           'altura': _alturaController.text,
           'peso': _pesoController.text,
           'idioma': _idiomaController.text,
@@ -72,7 +67,6 @@ class _PersonalizacaoDadosPerfilAlunoState
   bool _houveAlteracao() {
     return _nomeController.text != _dadosOriginais['nome'] ||
         _sexoController.text != _dadosOriginais['sexo'] ||
-        _idadeController.text != _dadosOriginais['idade'] ||
         _alturaController.text != _dadosOriginais['altura'] ||
         _pesoController.text != _dadosOriginais['peso'] ||
         _idiomaController.text != _dadosOriginais['idioma'];
@@ -101,7 +95,6 @@ class _PersonalizacaoDadosPerfilAlunoState
     await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
       'nome': _nomeController.text,
       'sexo': _sexoController.text,
-      'idade': _idadeController.text,
       'altura': _alturaController.text,
       'peso': _pesoController.text,
       'idioma': _idiomaController.text,
@@ -184,10 +177,6 @@ class _PersonalizacaoDadosPerfilAlunoState
                     obrigatorio: true, tipo: TextInputType.text),
                 _campoTexto("Sexo", _sexoController,
                     obrigatorio: false, tipo: TextInputType.text),
-                _campoTexto("Idade", _idadeController,
-                    obrigatorio: false,
-                    tipo: TextInputType.number,
-                    mascara: _idadeMask),
                 _campoTexto("Altura (m)", _alturaController,
                     obrigatorio: false,
                     tipo: TextInputType.number,

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../modelos/treino.dart';
 import '../servicos/treino_service.dart';
 
@@ -36,13 +37,17 @@ class TreinoAlunoTela extends StatelessWidget {
             );
           }
 
-          return ListView.separated(
+          return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: lista.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 16),
             itemBuilder: (context, i) {
               final t = lista[i];
-              return _cardTreino(context, t);
+              return Column(
+                children: [
+                  _cardTreino(context, t),
+                  const SizedBox(height: 16),
+                ],
+              );
             },
           );
         },
@@ -61,14 +66,34 @@ class TreinoAlunoTela extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Nome do treino
           Text(
             t.nome,
             style: const TextStyle(
-              color: Colors.white,
+              color: Colors.amber,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
+          const SizedBox(height: 8),
+
+          // Descrição
+          if (t.descricao.isNotEmpty)
+            Text(
+              t.descricao,
+              style: const TextStyle(color: Colors.white70),
+            ),
+
+          // Frequência
+          if (t.frequencia.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 6.0),
+              child: Text(
+                "Frequência: ${t.frequencia}",
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ),
+
           const SizedBox(height: 12),
 
           // Lista de exercícios (nome, séries, obs)
@@ -109,4 +134,3 @@ class TreinoAlunoTela extends StatelessWidget {
     );
   }
 }
-//att

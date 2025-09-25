@@ -24,7 +24,7 @@ class AlunosTela extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text("Meus Alunos"),
+        title: const Text(""),
         backgroundColor: Colors.black,
         foregroundColor: Colors.amber,
         centerTitle: true,
@@ -34,7 +34,7 @@ class AlunosTela extends StatelessWidget {
             .collection('users')
             .where('tipo', isEqualTo: 'aluno')
             .where('personalId', isEqualTo: personalId)
-            .snapshots(includeMetadataChanges: true), // 🔹 sem orderBy p/ evitar índice
+            .snapshots(includeMetadataChanges: true),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -67,54 +67,77 @@ class AlunosTela extends StatelessWidget {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: docs.length,
-            itemBuilder: (context, index) {
-              final alunoDoc = docs[index];
-              final aluno = alunoDoc.data() as Map<String, dynamic>;
-              final nome = aluno["nome"] ?? "Aluno sem nome";
-              final idade = aluno["idade"]?.toString() ?? "-";
-              final objetivo = aluno["objetivo"] ?? "-";
-              final alunoId = alunoDoc.id; // 🔹 pegamos o ID do documento
+          final totalAlunos = docs.length;
 
-              return Card(
-                color: Colors.grey[900],
-                margin: const EdgeInsets.only(bottom: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 🔹 Contador no topo
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  "Total de alunos vinculados: $totalAlunos",
+                  style: const TextStyle(
+                    color: Colors.amber,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
-                child: ListTile(
-                  leading: const CircleAvatar(
-                    backgroundColor: Colors.amber,
-                    child: Icon(Icons.person, color: Colors.black),
-                  ),
-                  title: Text(
-                    nome,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: Text(
-                    "$idade • $objetivo",
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.amber),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AlunoDetalhesTela(
-                          nomeAluno: nome,
-                          alunoId: alunoId, // 🔹 passamos o ID aqui
+              ),
+
+              // 🔹 Lista de alunos
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: docs.length,
+                  itemBuilder: (context, index) {
+                    final alunoDoc = docs[index];
+                    final aluno = alunoDoc.data() as Map<String, dynamic>;
+                    final nome = aluno["nome"] ?? "Aluno sem nome";
+                    final idade = aluno["idade"]?.toString() ?? "-";
+                    final objetivo = aluno["objetivo"] ?? "-";
+                    final alunoId = alunoDoc.id;
+
+                    return Card(
+                      color: Colors.grey[900],
+                      margin: const EdgeInsets.only(bottom: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        leading: const CircleAvatar(
+                          backgroundColor: Colors.amber,
+                          child: Icon(Icons.person, color: Colors.black),
                         ),
+                        title: Text(
+                          nome,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Text(
+                          "$idade • $objetivo",
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios, color: Colors.amber),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => AlunoDetalhesTela(
+                                nomeAluno: nome,
+                                alunoId: alunoId,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     );
                   },
                 ),
-              );
-            },
+              ),
+            ],
           );
         },
       ),

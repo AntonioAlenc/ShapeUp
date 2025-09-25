@@ -68,7 +68,6 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela> {
       return;
     }
 
-    // Remove espaços e traços do número
     String numeroFormatado =
     numeroPersonal!.replaceAll(' ', '').replaceAll('-', '');
 
@@ -86,9 +85,8 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela> {
 
   void _onItemTapped(int index) {
     if (index == 5) {
-      // 🔹 índice do WhatsApp
       _abrirWhatsApp();
-      return; // não troca de tela
+      return;
     }
 
     setState(() {
@@ -107,7 +105,7 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela> {
     ];
 
     final List<String> titulos = [
-      "Bom dia, João!",
+      "Início",
       "Treino",
       "Dieta",
       "Progresso",
@@ -173,83 +171,149 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela> {
 
   // 🔹 Tela inicial (dashboard do aluno)
   Widget _telaInicio(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return const Center(
+        child: Text(
+          "Usuário não autenticado",
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 🔹 Treino do dia (último criado)
           _cardSecao(
             titulo: "Treino de Hoje",
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Membros Superiores",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-                const SizedBox(height: 8),
-                const Text("• Supino Reto",
-                    style: TextStyle(color: Colors.white70)),
-                const Text("• Pulley Frontal",
-                    style: TextStyle(color: Colors.white70)),
-                const Text("• Rosca Direta",
-                    style: TextStyle(color: Colors.white70)),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      setState(() => _indiceSelecionado = 1); // abre treino
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('treinos')
+                  .where('alunoId', isEqualTo: user.uid)
+                  .orderBy('createdAt', descending: true)
+                  .limit(1)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.amber),
+                  );
+                }
+                final docs = snapshot.data!.docs;
+                if (docs.isEmpty) {
+                  return const Text(
+                    "Nenhum treino atribuído.",
+                    style: TextStyle(color: Colors.white70),
+                  );
+                }
+
+                final treino = docs.first.data() as Map<String, dynamic>;
+                final exercicios = (treino['exercicios'] as List?) ?? [];
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      treino['titulo'] ?? "Treino",
+                      style:
+                      const TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    for (var ex in exercicios.take(3))
+                      Text("• $ex",
+                          style: const TextStyle(color: Colors.white70)),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() => _indiceSelecionado = 1);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text("VER TREINO"),
                       ),
                     ),
-                    child: const Text("INICIAR TREINO"),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
           ),
           const SizedBox(height: 16),
 
+          // 🔹 Dieta do dia (última criada)
           _cardSecao(
-            titulo: "Refeições do dia",
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("Café da Manhã",
-                    style: TextStyle(color: Colors.white, fontSize: 16)),
-                const SizedBox(height: 8),
-                const Text("• 2 Bananas",
-                    style: TextStyle(color: Colors.white70)),
-                const Text("• 20g de Aveia",
-                    style: TextStyle(color: Colors.white70)),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      setState(() => _indiceSelecionado = 2); // abre dieta
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+            titulo: "Refeições do Dia",
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('dietas')
+                  .where('alunoId', isEqualTo: user.uid)
+                  .orderBy('createdAt', descending: true)
+                  .limit(1)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.amber),
+                  );
+                }
+                final docs = snapshot.data!.docs;
+                if (docs.isEmpty) {
+                  return const Text(
+                    "Nenhuma dieta atribuída.",
+                    style: TextStyle(color: Colors.white70),
+                  );
+                }
+
+                final dieta = docs.first.data() as Map<String, dynamic>;
+                final refeicoes = (dieta['refeicoes'] as List?) ?? [];
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      dieta['titulo'] ?? "Dieta",
+                      style:
+                      const TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    for (var r in refeicoes.take(3))
+                      Text("• $r",
+                          style: const TextStyle(color: Colors.white70)),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() => _indiceSelecionado = 2);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text("VER DIETA"),
                       ),
                     ),
-                    child: const Text("MARCAR COMO FEITO"),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
           ),
           const SizedBox(height: 16),
 
+          // 🔹 Progresso (mantém gráfico atual)
           _cardSecao(
             titulo: "Progresso",
             child: SizedBox(

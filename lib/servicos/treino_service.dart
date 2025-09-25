@@ -5,15 +5,19 @@ class TreinoService {
   TreinoService._();
   static final TreinoService instancia = TreinoService._();
 
-  final CollectionReference treinosRef = FirebaseFirestore.instance.collection('treinos');
+  final CollectionReference treinosRef =
+  FirebaseFirestore.instance.collection('treinos');
 
-  //Criar treino
+  // Criar treino
   Future<String> salvarTreino(Treino treino) async {
-    final doc = await treinosRef.add(treino.toMap());
+    final doc = await treinosRef.add({
+      ...treino.toMap(),
+      'dataCriacao': FieldValue.serverTimestamp(), // 🔹 padronizado
+    });
     return doc.id;
   }
 
-  //Atualziar treino existente
+  // Atualizar treino existente
   Future<void> atualizarTreino(String id, Treino treino) async {
     await treinosRef.doc(id).update({
       ...treino.toMap(),
@@ -21,7 +25,7 @@ class TreinoService {
     });
   }
 
-  //Excluir treino
+  // Excluir treino
   Future<void> excluirTreino(String id) async {
     await treinosRef.doc(id).delete();
   }
@@ -37,7 +41,7 @@ class TreinoService {
   Stream<List<Treino>> streamTreinosDoPersonal(String personalId) {
     return treinosRef
         .where('personalId', isEqualTo: personalId)
-        .orderBy('criadoEm', descending: true)
+        .orderBy('dataCriacao', descending: true) // 🔹 agora consistente
         .snapshots()
         .map((snap) => snap.docs.map((d) => Treino.fromDoc(d)).toList());
   }
@@ -46,7 +50,7 @@ class TreinoService {
   Stream<List<Treino>> streamTreinosDoAluno(String alunoId) {
     return treinosRef
         .where('alunoId', isEqualTo: alunoId)
-        .orderBy('criadoEm', descending: true)
+        .orderBy('dataCriacao', descending: true) // 🔹 agora consistente
         .snapshots()
         .map((snap) => snap.docs.map((d) => Treino.fromDoc(d)).toList());
   }

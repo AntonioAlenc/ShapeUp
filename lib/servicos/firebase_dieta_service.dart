@@ -3,11 +3,14 @@ import '../modelos/dieta.dart';
 
 class FirebaseDietaService {
   final CollectionReference dietasRef =
-      FirebaseFirestore.instance.collection('dietas');
+  FirebaseFirestore.instance.collection('dietas');
 
   // Adicionar dieta
   Future<void> adicionarDieta(Dieta dieta) async {
-    await dietasRef.doc(dieta.id).set(dieta.toMap());
+    await dietasRef.doc(dieta.id).set({
+      ...dieta.toMap(),
+      'criadoEm': FieldValue.serverTimestamp(), // 🔹 garante a ordenação
+    });
   }
 
   // Buscar dieta por ID
@@ -29,7 +32,10 @@ class FirebaseDietaService {
 
   // Atualizar dieta
   Future<void> atualizarDieta(Dieta dieta) async {
-    await dietasRef.doc(dieta.id).update(dieta.toMap());
+    await dietasRef.doc(dieta.id).update({
+      ...dieta.toMap(),
+      'atualizadoEm': FieldValue.serverTimestamp(), // 🔹 registra atualização
+    });
   }
 
   // Deletar dieta

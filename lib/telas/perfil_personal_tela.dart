@@ -11,6 +11,16 @@ class PerfilPersonalTela extends StatelessWidget {
     Navigator.of(context).pushReplacementNamed('/login');
   }
 
+  int _calcularIdade(DateTime nascimento) {
+    final hoje = DateTime.now();
+    int idade = hoje.year - nascimento.year;
+    if (hoje.month < nascimento.month ||
+        (hoje.month == nascimento.month && hoje.day < nascimento.day)) {
+      idade--;
+    }
+    return idade;
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -41,6 +51,17 @@ class PerfilPersonalTela extends StatelessWidget {
 
         final personal = snap.data!.data() as Map<String, dynamic>;
 
+        // 🔹 Tratamento da data de nascimento
+        String dataNascimentoTexto = "-";
+        String idadeTexto = "-";
+        if (personal["dataNascimento"] != null) {
+          final ts = personal["dataNascimento"] as Timestamp;
+          final nascimento = ts.toDate();
+          dataNascimentoTexto =
+          "${nascimento.day.toString().padLeft(2, '0')}/${nascimento.month.toString().padLeft(2, '0')}/${nascimento.year}";
+          idadeTexto = _calcularIdade(nascimento).toString();
+        }
+
         return Center(
           child: Container(
             width: double.infinity,
@@ -56,7 +77,8 @@ class PerfilPersonalTela extends StatelessWidget {
               children: [
                 _infoItem('Nome:', personal["nome"] ?? "-"),
                 _infoItem('Sexo:', personal["sexo"] ?? "-"),
-                _infoItem('Idade:', personal["idade"]?.toString() ?? "-"),
+                _infoItem('Data Nasc.:', dataNascimentoTexto),
+                _infoItem('Idade:', idadeTexto),
                 _infoItem('Altura:', personal["altura"]?.toString() ?? "-"),
                 _infoItem('Peso:', personal["peso"]?.toString() ?? "-"),
                 _infoItem('Idioma:', personal["idioma"] ?? "PT-BR"),
@@ -127,7 +149,7 @@ class PerfilPersonalTela extends StatelessWidget {
 
                 const SizedBox(height: 12),
 
-                // 🔹 Botão Sair (agora ocupa toda a largura)
+                // 🔹 Botão Sair
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(

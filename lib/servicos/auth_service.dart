@@ -14,12 +14,24 @@ class AuthService {
   /// Stream para ouvir mudanças de login/logout
   Stream<User?> get mudancasUsuario => _auth.authStateChanges();
 
+  /// Função auxiliar para calcular idade
+  int _calcularIdade(DateTime nascimento) {
+    final hoje = DateTime.now();
+    int idade = hoje.year - nascimento.year;
+    if (hoje.month < nascimento.month ||
+        (hoje.month == nascimento.month && hoje.day < nascimento.day)) {
+      idade--;
+    }
+    return idade;
+  }
+
   /// Cadastro com e-mail e senha
   Future<User?> cadastrarEmailSenha({
     required String email,
     required String senha,
     required String nome,
     required String tipoUsuario, // "aluno" ou "personal"
+    required DateTime? dataNascimento, // 🔹 novo parâmetro
   }) async {
     try {
       final cred = await _auth.createUserWithEmailAndPassword(
@@ -35,10 +47,13 @@ class AuthService {
         'email': email,
         'tipo': tipoUsuario,
         'createdAt': FieldValue.serverTimestamp(),
-        'idade': null,
         'peso': null,
         'altura': null,
         'fotoUrl': null,
+        'dataNascimento': dataNascimento != null
+            ? Timestamp.fromDate(dataNascimento)
+            : null,
+        'idade': dataNascimento != null ? _calcularIdade(dataNascimento) : null,
       };
 
       if (tipoUsuario == 'aluno') {

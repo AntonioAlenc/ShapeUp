@@ -18,7 +18,6 @@ class _PersonalizacaoDadosPerfilPersonalState
 
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _sexoController = TextEditingController();
-  final TextEditingController _idadeController = TextEditingController();
   final TextEditingController _alturaController = TextEditingController();
   final TextEditingController _pesoController = TextEditingController();
   final TextEditingController _idiomaController = TextEditingController();
@@ -26,8 +25,6 @@ class _PersonalizacaoDadosPerfilPersonalState
   final TextEditingController _telefoneController = TextEditingController();
 
   // 🔹 Máscaras
-  final _idadeMask =
-  MaskTextInputFormatter(mask: "###", filter: {"#": RegExp(r'[0-9]')});
   final _alturaMask =
   MaskTextInputFormatter(mask: "#.##", filter: {"#": RegExp(r'[0-9]')});
   final _pesoMask =
@@ -56,7 +53,6 @@ class _PersonalizacaoDadosPerfilPersonalState
       setState(() {
         _nomeController.text = dados['nome'] ?? '';
         _sexoController.text = dados['sexo'] ?? '';
-        _idadeController.text = dados['idade']?.toString() ?? '';
         _alturaController.text = dados['altura']?.toString() ?? '';
         _pesoController.text = dados['peso']?.toString() ?? '';
         _idiomaController.text = dados['idioma'] ?? 'PT-BR';
@@ -66,7 +62,6 @@ class _PersonalizacaoDadosPerfilPersonalState
         _dadosOriginais = {
           'nome': _nomeController.text,
           'sexo': _sexoController.text,
-          'idade': _idadeController.text,
           'altura': _alturaController.text,
           'peso': _pesoController.text,
           'idioma': _idiomaController.text,
@@ -80,7 +75,6 @@ class _PersonalizacaoDadosPerfilPersonalState
   bool _houveAlteracao() {
     return _nomeController.text != _dadosOriginais['nome'] ||
         _sexoController.text != _dadosOriginais['sexo'] ||
-        _idadeController.text != _dadosOriginais['idade'] ||
         _alturaController.text != _dadosOriginais['altura'] ||
         _pesoController.text != _dadosOriginais['peso'] ||
         _idiomaController.text != _dadosOriginais['idioma'] ||
@@ -110,7 +104,6 @@ class _PersonalizacaoDadosPerfilPersonalState
     await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
       'nome': _nomeController.text,
       'sexo': _sexoController.text,
-      'idade': _idadeController.text,
       'altura': _alturaController.text,
       'peso': _pesoController.text,
       'idioma': _idiomaController.text,
@@ -194,10 +187,6 @@ class _PersonalizacaoDadosPerfilPersonalState
                     obrigatorio: true, tipo: TextInputType.text),
                 _campoTexto("Sexo", _sexoController,
                     obrigatorio: false, tipo: TextInputType.text),
-                _campoTexto("Idade", _idadeController,
-                    obrigatorio: false,
-                    tipo: TextInputType.number,
-                    mascara: _idadeMask),
                 _campoTexto("Altura (m)", _alturaController,
                     obrigatorio: false,
                     tipo: TextInputType.number,

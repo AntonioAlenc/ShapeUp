@@ -1,52 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DietaAlunoTela extends StatelessWidget {
   const DietaAlunoTela({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return const Center(
+        child: Text(
+          'Não autenticado',
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    }
+
     return Container(
       color: Colors.black,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _blocoRefeicao(
-            context,
-            titulo: 'Café da Manhã',
-            alimentos: [
-              '2 Bananas',
-              '20g de Aveia',
-            ],
-          ),
-          _blocoRefeicao(
-            context,
-            titulo: 'Almoço',
-            alimentos: [
-              '120g de Arroz',
-              '50g de Feijão',
-              '180g de Frango',
-              'Salada Livre',
-              'Refri (Apenas 0)',
-            ],
-          ),
-          _blocoRefeicao(
-            context,
-            titulo: 'Lanche da Tarde',
-            alimentos: [
-              '2 Fatias de Pão Integral',
-              '10g de Muçarela',
-              '20g de Whey',
-            ],
-          ),
-          _blocoRefeicao(
-            context,
-            titulo: 'Jantar',
-            alimentos: [
-              'Omelete com 3 ovos',
-              'Salada de tomate',
-            ],
-          ),
-        ],
+      child: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('dietas')
+            .where('alunoId', isEqualTo: uid)
+            .orderBy('criadoEm', descending: true) // 🔹 lista todas ordenadas
+            .snapshots(),
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snap.hasData || snap.data!.docs.isEmpty) {
+            return const Center(
+              child: Text(
+                'Nenhuma dieta atribuída',
+                style: TextStyle(color: Colors.white),
+              ),
+            );
+          }
+
+          final docs = snap.data!.docs;
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: docs.length,
+            itemBuilder: (context, index) {
+              final data = docs[index].data() as Map<String, dynamic>;
+              final refeicoes = List<String>.from(data['refeicoes'] ?? []);
+              final titulo = data['nome'] ?? 'Dieta';
+
+              return _blocoRefeicao(
+                context,
+                titulo: titulo,
+                alimentos: refeicoes,
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -108,4 +117,3 @@ class DietaAlunoTela extends StatelessWidget {
     );
   }
 }
-//att
