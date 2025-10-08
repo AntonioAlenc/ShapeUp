@@ -23,12 +23,14 @@ class DietaAlunoTela extends StatelessWidget {
         stream: FirebaseFirestore.instance
             .collection('dietas')
             .where('alunoId', isEqualTo: uid)
-            .orderBy('criadoEm', descending: true) // 🔹 lista todas ordenadas
+            .where('criadoEm', isGreaterThan: Timestamp(0, 0)) // ✅ evita sumir da tela
+            .orderBy('criadoEm', descending: true) // ✅ ordena corretamente
             .snapshots(),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
+
           if (!snap.hasData || snap.data!.docs.isEmpty) {
             return const Center(
               child: Text(
@@ -45,13 +47,13 @@ class DietaAlunoTela extends StatelessWidget {
             itemCount: docs.length,
             itemBuilder: (context, index) {
               final data = docs[index].data() as Map<String, dynamic>;
-              final refeicoes = List<String>.from(data['refeicoes'] ?? []);
-              final titulo = data['nome'] ?? 'Dieta';
+              final titulo = data['refeicao'] ?? 'Dieta';
+              final detalhes = data['detalhes'] ?? '';
 
               return _blocoRefeicao(
                 context,
                 titulo: titulo,
-                alimentos: refeicoes,
+                alimentos: [detalhes], // ✅ adapta ao layout existente
               );
             },
           );

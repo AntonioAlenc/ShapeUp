@@ -42,4 +42,12 @@ class FirebaseDietaService {
   Future<void> deletarDieta(String id) async {
     await dietasRef.doc(id).delete();
   }
+  // Atribuir dieta ao aluno
+  Future<void> atribuirDieta(String dietaId, String alunoId) async {
+    await dietasRef.doc(dietaId).update({
+      'alunoId': alunoId,
+      'atualizadoEm': FieldValue.serverTimestamp(), // 🔹 registro de atualização
+    });
+  }
+
 }

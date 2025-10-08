@@ -74,20 +74,30 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
               onPressed: () async {
                 if (refeicaoController.text.trim().isEmpty) return;
 
-                final uid = FirebaseAuth.instance.currentUser!.uid; // 🔹 personal logado
+                final uid = FirebaseAuth.instance.currentUser!.uid; // personal logado
 
-                await dietasRef.add({
+                // 🔹 cria a dieta com os campos padronizados
+                final novaDieta = await dietasRef.add({
                   'alunoId': widget.alunoId,
-                  'personalId': uid, // 🔹 grava o personalId junto
+                  'personalId': uid,
                   'refeicao': refeicaoController.text.trim(),
                   'detalhes': detalhesController.text.trim(),
-                  'dataCriacao': Timestamp.now(),
+                  'criadoEm': FieldValue.serverTimestamp(), // ✅ campo padronizado
                 });
 
-                refeicaoController.dispose();
-                detalhesController.dispose();
+                // 🔹 garante a vinculação explícita ao aluno
+                await FirebaseFirestore.instance
+                    .collection('dietas')
+                    .doc(novaDieta.id)
+                    .update({
+                  'alunoId': widget.alunoId,
+                });
 
                 if (mounted) Navigator.pop(context);
+
+                // 🔹 descarte seguro após fechar o diálogo
+                refeicaoController.dispose();
+                detalhesController.dispose();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.amber,
@@ -101,7 +111,8 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
     );
   }
 
-  void _editarDieta(String dietaId, String refeicaoAtual, String detalhesAtuais) {
+  void _editarDieta(
+      String dietaId, String refeicaoAtual, String detalhesAtuais) {
     final refeicaoController = TextEditingController(text: refeicaoAtual);
     final detalhesController = TextEditingController(text: detalhesAtuais);
 
@@ -110,7 +121,8 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
       builder: (_) {
         return AlertDialog(
           backgroundColor: Colors.grey[800],
-          title: const Text("Editar Dieta", style: TextStyle(color: Colors.white)),
+          title:
+          const Text("Editar Dieta", style: TextStyle(color: Colors.white)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -137,24 +149,25 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancelar", style: TextStyle(color: Colors.amber)),
+              child:
+              const Text("Cancelar", style: TextStyle(color: Colors.amber)),
             ),
             ElevatedButton(
               onPressed: () async {
                 if (refeicaoController.text.trim().isEmpty) return;
 
-                final uid = FirebaseAuth.instance.currentUser!.uid; // 🔹 mantém o personal logado
+                final uid = FirebaseAuth.instance.currentUser!.uid;
 
                 await dietasRef.doc(dietaId).update({
                   'refeicao': refeicaoController.text.trim(),
                   'detalhes': detalhesController.text.trim(),
-                  'personalId': uid, // 🔹 garante que o personalId continua no doc
+                  'personalId': uid,
                 });
+
+                if (mounted) Navigator.pop(context);
 
                 refeicaoController.dispose();
                 detalhesController.dispose();
-
-                if (mounted) Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.amber,
@@ -173,13 +186,19 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text("Excluir dieta?", style: TextStyle(color: Colors.amber)),
-        content: const Text("Esta ação não pode ser desfeita.", style: TextStyle(color: Colors.white70)),
+        title:
+        const Text("Excluir dieta?", style: TextStyle(color: Colors.amber)),
+        content: const Text("Esta ação não pode ser desfeita.",
+            style: TextStyle(color: Colors.white70)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancelar", style: TextStyle(color: Colors.amber))),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child:
+              const Text("Cancelar", style: TextStyle(color: Colors.amber))),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red, foregroundColor: Colors.white),
             child: const Text("Excluir"),
           ),
         ],
@@ -190,18 +209,20 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
     try {
       await dietasRef.doc(dietaId).delete();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Dieta excluída")));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Dieta excluída")));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Falha ao excluir: $e")));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Falha ao excluir: $e")));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final uid = FirebaseAuth.instance.currentUser!.uid; // 🔹 pega o personal logado
+    final uid = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -219,7 +240,8 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
       body: StreamBuilder<QuerySnapshot>(
         stream: dietasRef
             .where('alunoId', isEqualTo: widget.alunoId)
-            .where('personalId', isEqualTo: uid) // 🔹 garante compatibilidade com regras
+            .where('personalId', isEqualTo: uid)
+            .orderBy('criadoEm', descending: true) // ✅ padronizado
             .snapshots(includeMetadataChanges: true),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -237,17 +259,11 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
           }
 
           final docs = (snapshot.data?.docs ?? []).toList();
-          docs.sort((a, b) {
-            final da = (a.data() as Map<String, dynamic>)['dataCriacao'];
-            final db = (b.data() as Map<String, dynamic>)['dataCriacao'];
-            final ta = da is Timestamp ? da.toDate() : DateTime.fromMillisecondsSinceEpoch(0);
-            final tb = db is Timestamp ? db.toDate() : DateTime.fromMillisecondsSinceEpoch(0);
-            return tb.compareTo(ta); // desc
-          });
 
           if (docs.isEmpty) {
             return const Center(
-              child: Text("Nenhuma dieta cadastrada para este aluno", style: TextStyle(color: Colors.white)),
+              child: Text("Nenhuma dieta cadastrada para este aluno",
+                  style: TextStyle(color: Colors.white)),
             );
           }
 
@@ -261,10 +277,12 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
               return Card(
                 color: Colors.grey[900],
                 margin: const EdgeInsets.only(bottom: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 child: ListTile(
                   title: Text((data['refeicao'] ?? "-").toString(),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
                   subtitle: Text((data['detalhes'] ?? "-").toString(),
                       style: const TextStyle(color: Colors.white70)),
                   trailing: Row(
@@ -282,7 +300,8 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
                       IconButton(
                         tooltip: "Excluir",
                         icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _confirmarExclusaoDieta(dietaDoc.id),
+                        onPressed: () =>
+                            _confirmarExclusaoDieta(dietaDoc.id),
                       ),
                     ],
                   ),
