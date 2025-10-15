@@ -23,8 +23,7 @@ class DietaAlunoTela extends StatelessWidget {
         stream: FirebaseFirestore.instance
             .collection('dietas')
             .where('alunoId', isEqualTo: uid)
-            .where('criadoEm', isGreaterThan: Timestamp(0, 0)) // ✅ evita sumir da tela
-            .orderBy('criadoEm', descending: true) // ✅ ordena corretamente
+            .orderBy('criadoEm', descending: true)
             .snapshots(),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
@@ -53,7 +52,7 @@ class DietaAlunoTela extends StatelessWidget {
               return _blocoRefeicao(
                 context,
                 titulo: titulo,
-                alimentos: [detalhes], // ✅ adapta ao layout existente
+                alimentos: [detalhes],
               );
             },
           );
