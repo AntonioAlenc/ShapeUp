@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'; // ✅ Importação para pt_BR e formato 24h
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,14 +23,13 @@ import 'telas/menu_personal_tela.dart';
 // Aluno
 import 'telas/treino_aluno_tela.dart';
 import 'telas/dieta_aluno_tela.dart';
-import 'telas/progresso_tela.dart';
+import 'telas/progresso_aluno_tela.dart';
 import 'telas/perfil_aluno_tela.dart';
 
 // Personal
 import 'telas/treino_personal_lista_tela.dart';
 import 'telas/dieta_personal_tela.dart';
 import 'telas/alunos_tela.dart';
-
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,6 +53,26 @@ class MeuAplicativo extends StatelessWidget {
     return MaterialApp(
       title: 'ShapeUp',
       debugShowCheckedModeBanner: false,
+
+      // ✅ Suporte completo ao idioma e formato pt_BR (datas e horas)
+      supportedLocales: const [
+        Locale('pt', 'BR'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      locale: const Locale('pt', 'BR'),
+
+      // ✅ Força o formato 24h
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
+
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.black,
         primaryColor: Colors.amber,
@@ -63,7 +83,7 @@ class MeuAplicativo extends StatelessWidget {
         ),
       ),
 
-      // 🔹 Todas as rotas importantes declaradas
+      // 🔹 Rotas do app
       routes: {
         '/login': (context) => const LoginTela(),
         '/cadastro': (context) => const CadastroTela(),
@@ -77,7 +97,7 @@ class MeuAplicativo extends StatelessWidget {
         // Aluno
         '/treino-aluno': (context) => const TreinoAlunoTela(),
         '/dieta-aluno': (context) => const DietaAlunoTela(),
-        '/progresso': (context) => const ProgressoTela(),
+        '/progresso': (context) => const ProgressoAlunoTela(),
         '/perfil-aluno': (context) => const PerfilAlunoTela(),
 
         // Personal
@@ -86,7 +106,7 @@ class MeuAplicativo extends StatelessWidget {
         '/alunos': (context) => const AlunosTela(),
       },
 
-      // 🔹 Decide tela inicial dinamicamente
+      // 🔹 Tela inicial dinâmica (decide com base no tipo de usuário)
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snap) {
@@ -94,7 +114,7 @@ class MeuAplicativo extends StatelessWidget {
             return const CarregamentoTela();
           }
           if (!snap.hasData) {
-            return const LoginTela(); // usuário não logado
+            return const LoginTela();
           }
 
           final uid = snap.data!.uid;
@@ -111,7 +131,6 @@ class MeuAplicativo extends StatelessWidget {
               final dados = snapUser.data!.data() as Map<String, dynamic>;
               final tipo = (dados['tipo'] ?? 'aluno').toString().toLowerCase();
 
-              // 🔹 Decide menu com base no tipo de usuário
               if (tipo == 'personal') {
                 return const MenuPersonalTela();
               } else {
