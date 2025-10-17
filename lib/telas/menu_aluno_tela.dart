@@ -7,7 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 // importe suas telas reais
 import 'treino_aluno_tela.dart';
 import 'dieta_aluno_tela.dart';
-import 'progresso_tela.dart';
+import 'progresso_aluno_tela.dart';
 import 'perfil_aluno_tela.dart';
 
 class MenuAlunoTela extends StatefulWidget {
@@ -129,7 +129,7 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
       _telaInicio(context),
       const TreinoAlunoTela(),
       const DietaAlunoTela(),
-      const ProgressoTela(),
+      const ProgressoAlunoTela(),
       const PerfilAlunoTela(),
     ];
 

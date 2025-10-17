@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'treinos_personal_aluno_tela.dart';
 import 'dietas_personal_aluno_tela.dart';
+import 'progresso_personal_aluno_tela.dart'; // 🔹 novo import
 
 class AlunoDetalhesTela extends StatelessWidget {
   final String nomeAluno;
@@ -158,6 +159,28 @@ class AlunoDetalhesTela extends StatelessWidget {
                         builder: (_) => DietasPersonalAlunoTela(
                           nomeAluno: nomeAluno,
                           alunoId: alunoId, // 🔹 passamos o ID aqui também
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 20),
+
+                // 🔹 Novo botão Progresso
+                _botaoMenu(
+                  context,
+                  titulo: "Progresso",
+                  icone: Icons.trending_up,
+                  onTap: () {
+                    final sexo = aluno["sexo"] ?? "masculino"; // 🔹 padrão seguro
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProgressoPersonalAlunoTela(
+                          nomeAluno: nomeAluno,
+                          alunoId: alunoId,
+                          sexo: sexo,
                         ),
                       ),
                     );
