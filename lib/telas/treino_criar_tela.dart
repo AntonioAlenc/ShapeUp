@@ -17,7 +17,6 @@ class _TreinoCriarTelaState extends State<TreinoCriarTela> {
   final _freq = TextEditingController();
   Treino? _edicao;
 
-  // lista dinâmica de exercícios
   List<Map<String, TextEditingController>> _exerciciosControllers = [];
 
   @override
@@ -30,7 +29,6 @@ class _TreinoCriarTelaState extends State<TreinoCriarTela> {
       _desc.text = arg.descricao;
       _freq.text = arg.frequencia;
 
-      // carregar exercícios do treino em edição
       _exerciciosControllers = arg.exercicios.map((ex) {
         return {
           "nome": TextEditingController(text: ex["nome"] ?? ""),

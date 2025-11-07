@@ -3,11 +3,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../modelos/progresso.dart';
 import '../servicos/firebase_progresso_service.dart';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/rendering.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 
 class ProgressoPersonalAlunoTela extends StatefulWidget {
   final String nomeAluno;
   final String alunoId;
-  final String sexo; // "masculino" ou "feminino"
+  final String sexo;
 
   const ProgressoPersonalAlunoTela({
     super.key,
@@ -29,6 +35,7 @@ class _ProgressoPersonalAlunoTelaState
   final _alturaController = TextEditingController();
   final _obsController = TextEditingController();
   final Map<String, TextEditingController> _medidasControllers = {};
+  final GlobalKey _graficoKey = GlobalKey();
 
   String _medidaSelecionada = "Peso";
   DateTime _dataSelecionada = DateTime.now();
@@ -63,8 +70,6 @@ class _ProgressoPersonalAlunoTelaState
     }
     super.dispose();
   }
-
-  // 🔹 Seletor de data aprimorado (formato e contraste)
   Future<void> _selecionarData(BuildContext context) async {
     final dataEscolhida = await showDatePicker(
       context: context,
@@ -87,41 +92,14 @@ class _ProgressoPersonalAlunoTelaState
               onSurface: Colors.white,
             ),
             dialogBackgroundColor: Colors.black,
-            textTheme: const TextTheme(
-              // 🔹 Controla a cor do texto digitado dentro do campo
-              bodyLarge: TextStyle(color: Colors.white, fontSize: 18),
-              bodyMedium: TextStyle(color: Colors.white),
-              titleLarge: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.amber,
-              ),
-            ),
-            inputDecorationTheme: const InputDecorationTheme(
-              labelStyle: TextStyle(color: Colors.amber),
-              hintStyle: TextStyle(color: Colors.white54),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.amber),
-              ),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white30),
-              ),
-            ),
-            textSelectionTheme: const TextSelectionThemeData(
-              cursorColor: Colors.amber,
-              selectionColor: Colors.amberAccent,
-              selectionHandleColor: Colors.amber,
-            ),
           ),
           child: child!,
         );
       },
-
     );
     if (dataEscolhida != null) setState(() => _dataSelecionada = dataEscolhida);
   }
 
-  // 🔸 Confirma antes de criar (e evita duplicar)
   Future<void> _confirmarCadastroProgresso() async {
     showDialog(
       context: context,
@@ -137,8 +115,7 @@ class _ProgressoPersonalAlunoTelaState
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child:
-              const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+              child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -147,23 +124,6 @@ class _ProgressoPersonalAlunoTelaState
               ),
               onPressed: () async {
                 Navigator.pop(context);
-                final snap = await FirebaseFirestore.instance
-                    .collection('progresso')
-                    .where('alunoId', isEqualTo: widget.alunoId)
-                    .limit(1)
-                    .get();
-                if (snap.docs.isNotEmpty) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text(
-                        'Este aluno já possui um registro de progresso. Utilize a opção Atualizar.',
-                        style: TextStyle(color: Colors.black),
-                      ),
-                      backgroundColor: Colors.amber,
-                    ));
-                  }
-                  return;
-                }
                 _cadastrarProgresso();
               },
               child: const Text('Confirmar'),
@@ -178,7 +138,6 @@ class _ProgressoPersonalAlunoTelaState
     try {
       final peso = double.tryParse(_pesoController.text) ?? 0;
       final altura = double.tryParse(_alturaController.text) ?? 0;
-
       if (peso <= 0 || altura <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Preencha peso e altura válidos.'),
@@ -186,7 +145,6 @@ class _ProgressoPersonalAlunoTelaState
         ));
         return;
       }
-
       final medidas = <String, double>{};
       _medidasControllers.forEach((k, v) {
         final val = double.tryParse(v.text);
@@ -227,14 +185,13 @@ class _ProgressoPersonalAlunoTelaState
       builder: (_) {
         return AlertDialog(
           backgroundColor: Colors.black,
-          title:
-          const Text('Registrar Progresso', style: TextStyle(color: Colors.amber)),
+          title: const Text('Registrar Progresso',
+              style: TextStyle(color: Colors.amber)),
           content: _formulario(),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child:
-              const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+              child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
               onPressed: _confirmarCadastroProgresso,
@@ -274,7 +231,9 @@ class _ProgressoPersonalAlunoTelaState
           keyboardType: TextInputType.number,
           style: const TextStyle(color: Colors.white),
           decoration: const InputDecoration(
-              labelText: 'Peso (kg)', labelStyle: TextStyle(color: Colors.amber)),
+            labelText: 'Peso (kg)',
+            labelStyle: TextStyle(color: Colors.amber),
+          ),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -282,32 +241,37 @@ class _ProgressoPersonalAlunoTelaState
           keyboardType: TextInputType.number,
           style: const TextStyle(color: Colors.white),
           decoration: const InputDecoration(
-              labelText: 'Altura (m)', labelStyle: TextStyle(color: Colors.amber)),
+            labelText: 'Altura (m)',
+            labelStyle: TextStyle(color: Colors.amber),
+          ),
         ),
         const SizedBox(height: 8),
-        ..._medidasControllers.entries.map((e) => Padding(
-          padding: const EdgeInsets.only(bottom: 8.0),
-          child: TextField(
-            controller: e.value,
-            keyboardType: TextInputType.number,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
+        ..._medidasControllers.entries.map(
+              (e) => Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: TextField(
+              controller: e.value,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
                 labelText: '${e.key} (cm)',
-                labelStyle: const TextStyle(color: Colors.amber)),
+                labelStyle: const TextStyle(color: Colors.amber),
+              ),
+            ),
           ),
-        )),
+        ),
         TextField(
           controller: _obsController,
           maxLines: 2,
           style: const TextStyle(color: Colors.white),
           decoration: const InputDecoration(
-              labelText: 'Observações',
-              labelStyle: TextStyle(color: Colors.amber)),
+            labelText: 'Observações',
+            labelStyle: TextStyle(color: Colors.amber),
+          ),
         ),
       ],
     ),
   );
-
   void _abrirModalAtualizar(String id, Map<String, dynamic> data) {
     _pesoController.text = (data['peso'] ?? '').toString();
     _alturaController.text = (data['altura'] ?? '').toString();
@@ -316,8 +280,7 @@ class _ProgressoPersonalAlunoTelaState
         DateTime.tryParse(data['data'] ?? '') ?? DateTime.now();
     final medidas = Map<String, dynamic>.from(data['medidas'] ?? {});
     for (final campo in _medidasControllers.keys) {
-      _medidasControllers[campo]?.text =
-          (medidas[campo] ?? '').toString();
+      _medidasControllers[campo]?.text = (medidas[campo] ?? '').toString();
     }
 
     showDialog(
@@ -325,19 +288,17 @@ class _ProgressoPersonalAlunoTelaState
       builder: (_) {
         return AlertDialog(
           backgroundColor: Colors.black,
-          title: const Text('Atualizar Progresso',
+          title: const Text('Editar Progresso',
               style: TextStyle(color: Colors.amber)),
           content: _formulario(),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child:
-              const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+              child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
               onPressed: () => _confirmarExcluir(id),
-              child:
-              const Text('Excluir', style: TextStyle(color: Colors.redAccent)),
+              child: const Text('Excluir', style: TextStyle(color: Colors.redAccent)),
             ),
             ElevatedButton(
               onPressed: () => _confirmarAtualizacao(id),
@@ -351,22 +312,18 @@ class _ProgressoPersonalAlunoTelaState
   }
 
   Future<void> _confirmarAtualizacao(String id) async {
-    final doc = await FirebaseFirestore.instance
-        .collection('progresso')
-        .doc(id)
-        .get();
+    final doc = await FirebaseFirestore.instance.collection('progresso').doc(id).get();
     final antigo = doc.data() ?? {};
     final medidasAtuais = Map<String, dynamic>.from(antigo['medidas'] ?? {});
     final medidasNovas = <String, double>{};
+
     _medidasControllers.forEach((k, v) {
       final valor = double.tryParse(v.text);
       if (valor != null && valor > 0) medidasNovas[k] = valor;
     });
 
-    final mudou = (double.tryParse(_pesoController.text) ?? 0) !=
-        (antigo['peso'] ?? 0) ||
-        (double.tryParse(_alturaController.text) ?? 0) !=
-            (antigo['altura'] ?? 0) ||
+    final mudou = (double.tryParse(_pesoController.text) ?? 0) != (antigo['peso'] ?? 0) ||
+        (double.tryParse(_alturaController.text) ?? 0) != (antigo['altura'] ?? 0) ||
         _obsController.text.trim() != (antigo['observacoes'] ?? '') ||
         medidasNovas.toString() != medidasAtuais.toString() ||
         _dataSelecionada.toIso8601String() != (antigo['data'] ?? '');
@@ -412,13 +369,9 @@ class _ProgressoPersonalAlunoTelaState
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white),
+                backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
             onPressed: () async {
-              await FirebaseFirestore.instance
-                  .collection('progresso')
-                  .doc(id)
-                  .delete();
+              await FirebaseFirestore.instance.collection('progresso').doc(id).delete();
               Navigator.pop(context);
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -433,6 +386,134 @@ class _ProgressoPersonalAlunoTelaState
     );
   }
 
+  Future<void> _gerarRelatorioPDF(List<QueryDocumentSnapshot> docs) async {
+    try {
+      // Captura o gráfico como imagem
+      RenderRepaintBoundary boundary =
+      _graficoKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData =
+      await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List? graficoBytes = byteData?.buffer.asUint8List();
+
+      // Cria o documento PDF
+      final pdf = pw.Document();
+      final aluno = widget.nomeAluno;
+      final dataGeracao = DateTime.now();
+
+      // Carrega a logo do ShapeUp
+      final logo = await imageFromAssetBundle('imagens/LogoVazada.png');
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(32),
+          build: (pw.Context context) {
+            return [
+              // 🔹 Cabeçalho estilizado com logo e título
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Container(
+                    height: 50,
+                    width: 50,
+                    child: pw.Image(logo),
+                  ),
+                  pw.Text(
+                    "Relatório de Progresso",
+                    style: pw.TextStyle(
+                      fontSize: 22,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.amber800,
+                    ),
+                  ),
+                  pw.SizedBox(width: 50), // espaçamento simétrico
+                ],
+              ),
+              pw.SizedBox(height: 8),
+              pw.Divider(color: PdfColors.amber800, thickness: 1.5),
+              pw.SizedBox(height: 8),
+
+              pw.Text("Aluno: $aluno",
+                  style: const pw.TextStyle(fontSize: 14)),
+              pw.Text(
+                  "Data de geração: ${dataGeracao.day}/${dataGeracao.month}/${dataGeracao.year}",
+                  style: const pw.TextStyle(fontSize: 12)),
+
+              if (graficoBytes != null) ...[
+                pw.SizedBox(height: 16),
+                pw.Center(
+                  child: pw.Image(pw.MemoryImage(graficoBytes),
+                      width: 400, height: 200, fit: pw.BoxFit.contain),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Center(
+                  child: pw.Text("Evolução do aluno",
+                      style: pw.TextStyle(
+                        fontSize: 14,
+                        color: PdfColors.grey700,
+                      )),
+                ),
+              ],
+              pw.SizedBox(height: 16),
+
+              // 🔹 Lista de registros
+              ...docs.map((d) {
+                final data = d.data() as Map<String, dynamic>;
+                final medidas = Map<String, dynamic>.from(data['medidas'] ?? {});
+                return pw.Container(
+                  margin: const pw.EdgeInsets.only(bottom: 16),
+                  padding: const pw.EdgeInsets.all(10),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColors.grey100,
+                    border: pw.Border.all(color: PdfColors.amber),
+                    borderRadius: pw.BorderRadius.circular(8),
+                  ),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        "📅 ${DateTime.parse(data['data']).day.toString().padLeft(2, '0')}/${DateTime.parse(data['data']).month.toString().padLeft(2, '0')}/${DateTime.parse(data['data']).year}",
+                        style: pw.TextStyle(
+                          fontSize: 14,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.amber800,
+                        ),
+                      ),
+                      pw.SizedBox(height: 4),
+                      pw.Text("Peso: ${data['peso']} kg"),
+                      ...medidas.entries.map(
+                            (m) => pw.Text("${m.key}: ${m.value} cm",
+                            style: const pw.TextStyle(fontSize: 11)),
+                      ),
+                      if (data['observacoes'] != null &&
+                          data['observacoes'].toString().isNotEmpty)
+                        pw.Text("Obs: ${data['observacoes']}",
+                            style: pw.TextStyle(
+                              fontStyle: pw.FontStyle.italic,
+                              color: PdfColors.grey700,
+                            )),
+                    ],
+                  ),
+                );
+              }),
+            ];
+          },
+        ),
+      );
+
+      // Exibe o PDF
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Erro ao gerar PDF: $e'),
+        backgroundColor: Colors.redAccent,
+      ));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -442,32 +523,6 @@ class _ProgressoPersonalAlunoTelaState
         backgroundColor: Colors.black,
         foregroundColor: Colors.amber,
         centerTitle: true,
-      ),
-      floatingActionButton: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('progresso')
-            .where('alunoId', isEqualTo: widget.alunoId)
-            .limit(1)
-            .snapshots(),
-        builder: (context, snap) {
-          final temProgresso = snap.hasData && snap.data!.docs.isNotEmpty;
-          return FloatingActionButton.extended(
-            backgroundColor: Colors.amber,
-            icon: Icon(
-                temProgresso ? Icons.edit : Icons.add, color: Colors.black),
-            label: Text(temProgresso ? "Atualizar" : "Registrar",
-                style: const TextStyle(color: Colors.black)),
-            onPressed: () {
-              if (temProgresso) {
-                final data = snap.data!.docs.first.data() as Map<String, dynamic>;
-                final id = snap.data!.docs.first.id;
-                _abrirModalAtualizar(id, data);
-              } else {
-                _abrirModalCadastro();
-              }
-            },
-          );
-        },
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -492,33 +547,6 @@ class _ProgressoPersonalAlunoTelaState
           final ultimaData = DateTime.tryParse(
               ultimo['atualizadoEm'] ?? ultimo['data'] ?? '') ??
               DateTime.now();
-          final dias = DateTime.now().difference(ultimaData).inDays;
-          Color corBorda, corFundo, corTexto;
-          IconData icone;
-          String texto;
-
-          if (dias <= 15) {
-            corBorda = Colors.green;
-            corFundo = Colors.green.withOpacity(0.15);
-            corTexto = Colors.greenAccent;
-            icone = Icons.check_circle_outline;
-            texto =
-            "Progresso recente (${ultimaData.day}/${ultimaData.month}/${ultimaData.year})";
-          } else if (dias <= 30) {
-            corBorda = Colors.amber;
-            corFundo = Colors.amber.withOpacity(0.15);
-            corTexto = Colors.amber;
-            icone = Icons.access_time;
-            texto =
-            "Última atualização: ${ultimaData.day}/${ultimaData.month}/${ultimaData.year}";
-          } else {
-            corBorda = Colors.red;
-            corFundo = Colors.red.withOpacity(0.15);
-            corTexto = Colors.redAccent;
-            icone = Icons.warning_amber_rounded;
-            texto =
-            "⚠️ Progresso desatualizado! (${ultimaData.day}/${ultimaData.month}/${ultimaData.year})";
-          }
 
           final List<FlSpot> pontos = [];
           final List<String> labelsDatas = [];
@@ -543,33 +571,60 @@ class _ProgressoPersonalAlunoTelaState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  padding:
-                  const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: corFundo,
-                    border: Border.all(color: corBorda, width: 1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(icone, color: corTexto, size: 20),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          texto,
-                          style: TextStyle(
-                              color: corTexto,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14),
-                          textAlign: TextAlign.center,
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Última atualização: ${ultimaData.day}/${ultimaData.month}/${ultimaData.year}",
+                      style: const TextStyle(
+                          color: Colors.amber,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                    ],
-                  ),
+                      onPressed: _abrirModalCadastro,
+                      icon: const Icon(Icons.add),
+                      label: const Text("Novo Progresso"),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () async {
+                    final snapData = await FirebaseFirestore.instance
+                        .collection('progresso')
+                        .where('alunoId', isEqualTo: widget.alunoId)
+                        .orderBy('data', descending: false)
+                        .get();
+                    if (snapData.docs.isEmpty) {
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(const SnackBar(
+                        content: Text(
+                            'Nenhum progresso encontrado para exportar.'),
+                        backgroundColor: Colors.amber,
+                      ));
+                      return;
+                    }
+                    await _gerarRelatorioPDF(snapData.docs);
+                  },
+                  icon: const Icon(Icons.picture_as_pdf),
+                  label: const Text("Exportar Relatório em PDF"),
+                ),
+                const SizedBox(height: 16),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -580,53 +635,56 @@ class _ProgressoPersonalAlunoTelaState
                   ),
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  height: 220,
-                  child: LineChart(
-                    LineChartData(
-                      gridData: FlGridData(show: false),
-                      borderData: FlBorderData(
-                          show: true,
-                          border: Border.all(color: Colors.amber, width: 1)),
-                      titlesData: FlTitlesData(
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 40,
-                              getTitlesWidget: (v, _) => Text(
-                                  v.toStringAsFixed(0),
-                                  style: const TextStyle(
-                                      color: Colors.white70, fontSize: 12))),
-                        ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (v, _) {
-                              final idx = v.toInt();
-                              if (idx < 0 || idx >= labelsDatas.length) {
-                                return const SizedBox();
-                              }
-                              return Text(labelsDatas[idx],
-                                  style: const TextStyle(
-                                      color: Colors.white70, fontSize: 10));
-                            },
+                RepaintBoundary(
+                  key: _graficoKey,
+                  child: SizedBox(
+                    height: 220,
+                    child: LineChart(
+                      LineChartData(
+                        gridData: FlGridData(show: false),
+                        borderData: FlBorderData(
+                            show: true,
+                            border: Border.all(color: Colors.amber, width: 1)),
+                        titlesData: FlTitlesData(
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 40,
+                                getTitlesWidget: (v, _) => Text(
+                                    v.toStringAsFixed(0),
+                                    style: const TextStyle(
+                                        color: Colors.white70, fontSize: 12))),
                           ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (v, _) {
+                                final idx = v.toInt();
+                                if (idx < 0 || idx >= labelsDatas.length) {
+                                  return const SizedBox();
+                                }
+                                return Text(labelsDatas[idx],
+                                    style: const TextStyle(
+                                        color: Colors.white70, fontSize: 10));
+                              },
+                            ),
+                          ),
+                          rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
+                          topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
                         ),
-                        rightTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
-                        topTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: pontos,
+                            isCurved: true,
+                            color: Colors.amber,
+                            barWidth: 3,
+                            dotData: FlDotData(show: true),
+                            belowBarData: BarAreaData(show: false),
+                          ),
+                        ],
                       ),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: pontos,
-                          isCurved: true,
-                          color: Colors.amber,
-                          barWidth: 3,
-                          dotData: FlDotData(show: true),
-                          belowBarData: BarAreaData(show: false),
-                        ),
-                      ],
                     ),
                   ),
                 ),
@@ -642,27 +700,51 @@ class _ProgressoPersonalAlunoTelaState
                     return Card(
                       color: Colors.grey[900],
                       margin: const EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                        title: Text(
-                          '📅 ${DateTime.parse(d['data']).day.toString().padLeft(2, '0')}/${DateTime.parse(d['data']).month.toString().padLeft(2, '0')}/${DateTime.parse(d['data']).year}',
-                          style: const TextStyle(color: Colors.amber),
-                        ),
-                        subtitle: Column(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text(
+                              '📅 ${DateTime.parse(d['data']).day.toString().padLeft(2, '0')}/${DateTime.parse(d['data']).month.toString().padLeft(2, '0')}/${DateTime.parse(d['data']).year}',
+                              style: const TextStyle(
+                                  color: Colors.amber, fontSize: 16),
+                            ),
+                            const SizedBox(height: 6),
                             Text('Peso: ${d['peso']} kg',
                                 style: const TextStyle(color: Colors.white)),
                             ...medidas.entries.map((m) => Text(
                               '${m.key}: ${m.value} cm',
-                              style:
-                              const TextStyle(color: Colors.white70),
+                              style: const TextStyle(color: Colors.white70),
                             )),
                             if (d['observacoes'] != null &&
                                 d['observacoes'].toString().isNotEmpty)
-                              Text('Obs: ${d['observacoes']}',
-                                  style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontStyle: FontStyle.italic)),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text('Obs: ${d['observacoes']}',
+                                    style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontStyle: FontStyle.italic)),
+                              ),
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  final id = docs[i].id;
+                                  _abrirModalAtualizar(id, d);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber,
+                                  foregroundColor: Colors.black,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.edit),
+                                label: const Text("Editar"),
+                              ),
+                            ),
                           ],
                         ),
                       ),

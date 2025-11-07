@@ -55,7 +55,6 @@ class TreinoAlunoTela extends StatelessWidget {
     );
   }
 
-  /// 🔹 Card de treino individual
   Widget _cardTreino(BuildContext context, Treino t) {
     return Container(
       padding: const EdgeInsets.all(16),

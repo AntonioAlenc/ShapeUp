@@ -19,7 +19,7 @@ class _RecuperacaoSenhaTelaState extends State<RecuperacaoSenhaTela> {
 
     try {
       await AuthService.instancia
-          .recuperarSenha(_emailController.text.trim()); // 🔹 metodo no AuthService
+          .recuperarSenha(_emailController.text.trim());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('E-mail de recuperação enviado!'),
@@ -81,7 +81,6 @@ class _RecuperacaoSenhaTelaState extends State<RecuperacaoSenhaTela> {
             ),
             const SizedBox(height: 40),
 
-            // 🔹 Container amarelo arredondado
             Expanded(
               child: Container(
                 width: double.infinity,

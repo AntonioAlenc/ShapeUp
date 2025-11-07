@@ -13,7 +13,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-
+  pdf: ^3.11.0
+  printing: ^5.12.0
 
   # Firebase (linha 4.x estável p/ Flutter 3.x)
   firebase_core: ^4.1.0
