@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/rendering.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class ProgressoAlunoTela extends StatefulWidget {
   const ProgressoAlunoTela({super.key});
@@ -12,6 +18,7 @@ class ProgressoAlunoTela extends StatefulWidget {
 
 class _ProgressoAlunoTelaState extends State<ProgressoAlunoTela> {
   final uid = FirebaseAuth.instance.currentUser?.uid;
+  final GlobalKey _graficoKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -41,18 +48,153 @@ class _ProgressoAlunoTelaState extends State<ProgressoAlunoTela> {
         final ultimo = docs.first.data() as Map<String, dynamic>;
         final medidas = Map<String, dynamic>.from(ultimo['medidas'] ?? {});
 
+        // 🔹 Botão para exportar o relatório em PDF
+        final botaoPDF = Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () async {
+              final snapData = await FirebaseFirestore.instance
+                  .collection('progresso')
+                  .where('alunoId', isEqualTo: uid)
+                  .orderBy('data', descending: false)
+                  .get();
+              if (snapData.docs.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Nenhum progresso encontrado para exportar.'),
+                  backgroundColor: Colors.amber,
+                ));
+                return;
+              }
+              await _gerarRelatorioPDF(snapData.docs);
+            },
+            icon: const Icon(Icons.picture_as_pdf),
+            label: const Text("Exportar Relatório em PDF"),
+          ),
+        );
+
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            botaoPDF,
             _secaoMedidas(ultimo, medidas),
             const SizedBox(height: 16),
-            _secaoGraficoPeso(docs),
-            const SizedBox(height: 16),
-            _secaoGraficoMedidas(docs),
+            RepaintBoundary(
+              key: _graficoKey,
+              child: Column(
+                children: [
+                  _secaoGraficoPeso(docs),
+                  const SizedBox(height: 16),
+                  _secaoGraficoMedidas(docs),
+                ],
+              ),
+            ),
           ],
         );
       },
     );
+  }
+
+  // 🔹 Função para gerar PDF
+  Future<void> _gerarRelatorioPDF(List<QueryDocumentSnapshot> docs) async {
+    try {
+      RenderRepaintBoundary boundary =
+      _graficoKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData =
+      await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List? graficoBytes = byteData?.buffer.asUint8List();
+
+      final pdf = pw.Document();
+      final dataGeracao = DateTime.now();
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(32),
+          build: (pw.Context context) {
+            return [
+              pw.Center(
+                child: pw.Text(
+                  "Relatório de Progresso - ShapeUp",
+                  style: pw.TextStyle(
+                    fontSize: 22,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.amber800,
+                  ),
+                ),
+              ),
+              pw.SizedBox(height: 4),
+              pw.Center(
+                child: pw.Text(
+                  "Gerado em: ${dataGeracao.day}/${dataGeracao.month}/${dataGeracao.year}",
+                  style: const pw.TextStyle(fontSize: 12),
+                ),
+              ),
+              if (graficoBytes != null) ...[
+                pw.SizedBox(height: 16),
+                pw.Center(
+                  child: pw.Image(pw.MemoryImage(graficoBytes),
+                      width: 400, height: 200, fit: pw.BoxFit.contain),
+                ),
+              ],
+              pw.SizedBox(height: 16),
+              ...docs.map((d) {
+                final data = d.data() as Map<String, dynamic>;
+                final medidas =
+                Map<String, dynamic>.from(data['medidas'] ?? {});
+                return pw.Container(
+                  margin: const pw.EdgeInsets.only(bottom: 16),
+                  padding: const pw.EdgeInsets.all(10),
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: PdfColors.amber),
+                    borderRadius: pw.BorderRadius.circular(8),
+                  ),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        "📅 ${DateTime.parse(data['data']).day.toString().padLeft(2, '0')}/${DateTime.parse(data['data']).month.toString().padLeft(2, '0')}/${DateTime.parse(data['data']).year}",
+                        style: pw.TextStyle(
+                          fontSize: 14,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.amber800,
+                        ),
+                      ),
+                      pw.SizedBox(height: 4),
+                      pw.Text("Peso: ${data['peso']} kg"),
+                      ...medidas.entries.map((m) =>
+                          pw.Text("${m.key}: ${m.value} cm",
+                              style: const pw.TextStyle(fontSize: 11))),
+                      if (data['observacoes'] != null &&
+                          data['observacoes'].toString().isNotEmpty)
+                        pw.Text("Obs: ${data['observacoes']}",
+                            style: pw.TextStyle(
+                                fontStyle: pw.FontStyle.italic,
+                                color: PdfColors.grey700)),
+                    ],
+                  ),
+                );
+              }),
+            ];
+          },
+        ),
+      );
+
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Erro ao gerar PDF: $e'),
+        backgroundColor: Colors.redAccent,
+      ));
+    }
   }
 
   // 🔹 Seção de medições corporais
@@ -116,7 +258,8 @@ class _ProgressoAlunoTelaState extends State<ProgressoAlunoTela> {
                     if (index >= 0 && index < rotulos.length) {
                       return Text(
                         rotulos[index],
-                        style: const TextStyle(color: Colors.white70, fontSize: 10),
+                        style:
+                        const TextStyle(color: Colors.white70, fontSize: 10),
                       );
                     }
                     return const SizedBox();
@@ -129,7 +272,8 @@ class _ProgressoAlunoTelaState extends State<ProgressoAlunoTela> {
                   reservedSize: 30,
                   getTitlesWidget: (v, _) => Text(
                     '${v.toInt()}kg',
-                    style: const TextStyle(color: Colors.white70, fontSize: 10),
+                    style:
+                    const TextStyle(color: Colors.white70, fontSize: 10),
                   ),
                 ),
               ),
@@ -206,7 +350,8 @@ class _ProgressoAlunoTelaState extends State<ProgressoAlunoTela> {
                     if (index >= 0 && index < rotulos.length) {
                       return Text(
                         rotulos[index],
-                        style: const TextStyle(color: Colors.white70, fontSize: 10),
+                        style:
+                        const TextStyle(color: Colors.white70, fontSize: 10),
                       );
                     }
                     return const SizedBox();
@@ -219,7 +364,8 @@ class _ProgressoAlunoTelaState extends State<ProgressoAlunoTela> {
                   reservedSize: 30,
                   getTitlesWidget: (v, _) => Text(
                     '${v.toInt()}cm',
-                    style: const TextStyle(color: Colors.white70, fontSize: 10),
+                    style:
+                    const TextStyle(color: Colors.white70, fontSize: 10),
                   ),
                 ),
               ),
