@@ -56,12 +56,19 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
         ),
         actions: _indiceSelecionado == 2
             ? []
-            : const [
+            : [
           Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: CircleAvatar(
-              backgroundColor: Colors.amber,
-              child: Icon(Icons.person, color: Colors.black),
+            padding: const EdgeInsets.only(right: 16),
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _indiceSelecionado = 2; // 👉 Abre o Perfil do Personal
+                });
+              },
+              child: const CircleAvatar(
+                backgroundColor: Colors.amber,
+                child: Icon(Icons.person, color: Colors.black),
+              ),
             ),
           ),
         ],

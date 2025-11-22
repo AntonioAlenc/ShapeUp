@@ -16,6 +16,7 @@ class _LoginTelaState extends State<LoginTela> {
   final _senhaController = TextEditingController();
   bool _carregando = false;
   bool _lembrarMe = false;
+  bool _mostrarSenha = false;
 
   @override
   void initState() {
@@ -155,8 +156,20 @@ class _LoginTelaState extends State<LoginTela> {
                         TextFormField(
                           controller: _senhaController,
                           style: const TextStyle(color: Colors.white),
-                          obscureText: true,
-                          decoration: _dec("Senha", Icons.lock),
+                          obscureText: !_mostrarSenha, // ALTERADO
+                          decoration: _dec("Senha", Icons.lock).copyWith(
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _mostrarSenha ? Icons.visibility : Icons.visibility_off,
+                                color: Colors.amber,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _mostrarSenha = !_mostrarSenha;
+                                });
+                              },
+                            ),
+                          ),
                           validator: (v) =>
                           v == null || v.length < 6 ? "Senha inválida" : null,
                         ),

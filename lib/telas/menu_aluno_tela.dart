@@ -150,12 +150,19 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
           titulos[_indiceSelecionado],
           style: const TextStyle(color: Colors.white, fontSize: 20),
         ),
-        actions: const [
+        actions: [
           Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: CircleAvatar(
-              backgroundColor: Colors.amber,
-              child: Icon(Icons.person, color: Colors.black),
+            padding: const EdgeInsets.only(right: 16),
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _indiceSelecionado = 4; // 👉 Abre a aba "Perfil"
+                });
+              },
+              child: const CircleAvatar(
+                backgroundColor: Colors.amber,
+                child: Icon(Icons.person, color: Colors.black),
+              ),
             ),
           ),
         ],

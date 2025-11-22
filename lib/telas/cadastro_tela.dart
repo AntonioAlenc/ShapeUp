@@ -17,6 +17,7 @@ class _CadastroTelaState extends State<CadastroTela> {
   String _tipoUsuario = 'aluno';
   bool _carregando = false;
   bool _aceitouTermos = false; // 🔹 controle do checkbox
+  bool _mostrarSenha = false;
 
   DateTime? _dataNascimento; // 🔹 nova variável
 
@@ -206,8 +207,20 @@ class _CadastroTelaState extends State<CadastroTela> {
                         TextFormField(
                           controller: _senhaController,
                           style: const TextStyle(color: Colors.white),
-                          obscureText: true,
-                          decoration: _dec("Senha", Icons.lock),
+                          obscureText: !_mostrarSenha, // AGORA CONTROLADO PELO OLHO
+                          decoration: _dec("Senha", Icons.lock).copyWith(
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _mostrarSenha ? Icons.visibility : Icons.visibility_off,
+                                color: Colors.amber,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _mostrarSenha = !_mostrarSenha;
+                                });
+                              },
+                            ),
+                          ),
                           validator: (v) {
                             if (v == null || v.isEmpty) {
                               return "Preencha este campo";
