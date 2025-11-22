@@ -2,17 +2,28 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../modelos/treino.dart';
 
 class TreinoService {
-  TreinoService._();
-  static final TreinoService instancia = TreinoService._();
+  // Construtor padrão (produção)
+  TreinoService({FirebaseFirestore? instance})
+      : firestore = instance ?? FirebaseFirestore.instance;
 
-  final CollectionReference treinosRef =
-  FirebaseFirestore.instance.collection('treinos');
+  // Construtor exclusivo para testes (impede conexão com Firebase real)
+  TreinoService.test(this.firestore);
+
+  // Instância padrão (não afeta testes porque você usará o construtor test)
+  static TreinoService instancia = TreinoService();
+
+  // Firestore interno usado pelo serviço
+  final FirebaseFirestore firestore;
+
+  // Getter da coleção treinos
+  CollectionReference get treinosRef =>
+      firestore.collection('treinos');
 
   // Criar treino
   Future<String> salvarTreino(Treino treino) async {
     final doc = await treinosRef.add({
       ...treino.toMap(),
-      'dataCriacao': FieldValue.serverTimestamp(), // 🔹 padronizado
+      'dataCriacao': FieldValue.serverTimestamp(),
     });
     return doc.id;
   }
@@ -41,18 +52,20 @@ class TreinoService {
   Stream<List<Treino>> streamTreinosDoPersonal(String personalId) {
     return treinosRef
         .where('personalId', isEqualTo: personalId)
-        .orderBy('dataCriacao', descending: true) // 🔹 agora consistente
+        .orderBy('dataCriacao', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => Treino.fromDoc(d)).toList());
+        .map((snap) =>
+        snap.docs.map((d) => Treino.fromDoc(d)).toList());
   }
 
   // Stream: treinos atribuídos ao aluno
   Stream<List<Treino>> streamTreinosDoAluno(String alunoId) {
     return treinosRef
         .where('alunoId', isEqualTo: alunoId)
-        .orderBy('dataCriacao', descending: true) // 🔹 agora consistente
+        .orderBy('dataCriacao', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => Treino.fromDoc(d)).toList());
+        .map((snap) =>
+        snap.docs.map((d) => Treino.fromDoc(d)).toList());
   }
 
   // Atribuir treino ao aluno

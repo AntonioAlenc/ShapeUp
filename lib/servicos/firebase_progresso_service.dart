@@ -2,14 +2,23 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../modelos/progresso.dart';
 
 class FirebaseProgressoService {
-  final CollectionReference progressoRef =
-  FirebaseFirestore.instance.collection('progresso');
+  // Firestore interno que pode ser real ou fake
+  final FirebaseFirestore firestore;
+
+  // Construtor padrão (produção)
+  FirebaseProgressoService() : firestore = FirebaseFirestore.instance;
+
+  // Construtor exclusivo para testes — evita Firebase REAL
+  FirebaseProgressoService.test(this.firestore);
+
+  // Getter da coleção
+  CollectionReference get progressoRef =>
+      firestore.collection('progresso');
 
   // Adicionar novo registro de progresso
   Future<void> adicionarProgresso(Progresso progresso) async {
     final dados = progresso.toMap();
 
-    // 🔹 Garante que todos os campos de medidas estejam presentes
     final medidasPadrao = {
       'bracoDireito': (dados['medidas']['bracoDireito'] ?? 0.0).toDouble(),
       'bracoEsquerdo': (dados['medidas']['bracoEsquerdo'] ?? 0.0).toDouble(),
@@ -50,7 +59,6 @@ class FirebaseProgressoService {
   Future<void> atualizarProgresso(Progresso progresso) async {
     final dados = progresso.toMap();
 
-    // 🔹 Garante que todos os campos existam no update
     final medidasPadrao = {
       'bracoDireito': (dados['medidas']['bracoDireito'] ?? 0.0).toDouble(),
       'bracoEsquerdo': (dados['medidas']['bracoEsquerdo'] ?? 0.0).toDouble(),

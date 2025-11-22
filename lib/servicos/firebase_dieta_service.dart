@@ -2,14 +2,24 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../modelos/dieta.dart';
 
 class FirebaseDietaService {
-  final CollectionReference dietasRef =
-  FirebaseFirestore.instance.collection('dietas');
+  // Instância Firestore (real ou fake)
+  final FirebaseFirestore firestore;
+
+  // Construtor padrão
+  FirebaseDietaService() : firestore = FirebaseFirestore.instance;
+
+  // Construtor especial para testes
+  FirebaseDietaService.test(this.firestore);
+
+  // Getter da coleção
+  CollectionReference get dietasRef =>
+      firestore.collection('dietas');
 
   // Adicionar dieta
   Future<void> adicionarDieta(Dieta dieta) async {
     await dietasRef.doc(dieta.id).set({
       ...dieta.toMap(),
-      'criadoEm': FieldValue.serverTimestamp(), // 🔹 garante a ordenação
+      'criadoEm': FieldValue.serverTimestamp(),
     });
   }
 
@@ -34,7 +44,7 @@ class FirebaseDietaService {
   Future<void> atualizarDieta(Dieta dieta) async {
     await dietasRef.doc(dieta.id).update({
       ...dieta.toMap(),
-      'atualizadoEm': FieldValue.serverTimestamp(), // 🔹 registra atualização
+      'atualizadoEm': FieldValue.serverTimestamp(),
     });
   }
 
@@ -42,12 +52,12 @@ class FirebaseDietaService {
   Future<void> deletarDieta(String id) async {
     await dietasRef.doc(id).delete();
   }
+
   // Atribuir dieta ao aluno
   Future<void> atribuirDieta(String dietaId, String alunoId) async {
     await dietasRef.doc(dietaId).update({
       'alunoId': alunoId,
-      'atualizadoEm': FieldValue.serverTimestamp(), // 🔹 registro de atualização
+      'atualizadoEm': FieldValue.serverTimestamp(),
     });
   }
-
 }
