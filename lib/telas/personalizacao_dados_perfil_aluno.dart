@@ -22,13 +22,13 @@ class _PersonalizacaoDadosPerfilAlunoState
   final TextEditingController _pesoController = TextEditingController();
   final TextEditingController _idiomaController = TextEditingController();
 
-  // 🔹 Máscaras
+ 
   final _alturaMask =
   MaskTextInputFormatter(mask: "#.##", filter: {"#": RegExp(r'[0-9]')});
   final _pesoMask =
   MaskTextInputFormatter(mask: "##0.0", filter: {"#": RegExp(r'[0-9]')});
 
-  // 🔹 Snapshot dos dados originais (para detectar alterações)
+  
   Map<String, String> _dadosOriginais = {};
 
   @override
@@ -73,7 +73,7 @@ class _PersonalizacaoDadosPerfilAlunoState
   }
 
   Future<void> _salvarAlteracoes() async {
-    // 🚦 Sem alterações? apenas avisa e não salva
+    
     if (!_houveAlteracao()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -113,7 +113,7 @@ class _PersonalizacaoDadosPerfilAlunoState
   }
 
   Future<void> _confirmarCancelar() async {
-    // Se não houve alteração, sai direto
+    
     if (!_houveAlteracao()) {
       Navigator.pop(context);
       return;
@@ -190,7 +190,7 @@ class _PersonalizacaoDadosPerfilAlunoState
 
                 const SizedBox(height: 20),
 
-                // 🔹 Botões lado a lado
+                
                 Row(
                   children: [
                     Expanded(
@@ -239,7 +239,7 @@ class _PersonalizacaoDadosPerfilAlunoState
     );
   }
 
-  // 🔹 Campo editável com estilo e validação
+  
   Widget _campoTexto(
       String label,
       TextEditingController controller, {

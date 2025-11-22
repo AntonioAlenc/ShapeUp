@@ -12,7 +12,7 @@ class VincularAlunoTela extends StatefulWidget {
 class _VincularAlunoTelaState extends State<VincularAlunoTela> {
   final _formKey = GlobalKey<FormState>();
   final _uidAlunoController = TextEditingController();
-  final _objetivoController = TextEditingController(); // 🔹 novo campo
+  final _objetivoController = TextEditingController(); 
   bool _carregando = false;
 
   @override
@@ -44,7 +44,7 @@ class _VincularAlunoTelaState extends State<VincularAlunoTela> {
 
       await docRef.update({
         'personalId': personalId,
-        if (objetivo.isNotEmpty) 'objetivo': objetivo, // 🔹 atualiza objetivo
+        if (objetivo.isNotEmpty) 'objetivo': objetivo, 
       });
 
       if (mounted) {
@@ -98,7 +98,7 @@ class _VincularAlunoTelaState extends State<VincularAlunoTela> {
                 controller: _objetivoController,
                 style: const TextStyle(color: Colors.white),
                 decoration: _dec("Objetivo do Aluno"),
-                validator: (v) => null, // objetivo é opcional
+                validator: (v) => null, 
               ),
               const SizedBox(height: 20),
               _carregando

@@ -1,4 +1,4 @@
-// Telas de placeholder para corrigir rotas não existentes
+
 import 'package:flutter/material.dart';
 
 class AlunosTela extends StatelessWidget {

@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class DietasPersonalAlunoTela extends StatefulWidget {
   final String nomeAluno;
-  final String alunoId; // 🔹 agora recebemos também o ID
+  final String alunoId; 
 
   const DietasPersonalAlunoTela({
     super.key,
@@ -74,18 +74,18 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
               onPressed: () async {
                 if (refeicaoController.text.trim().isEmpty) return;
 
-                final uid = FirebaseAuth.instance.currentUser!.uid; // personal logado
+                final uid = FirebaseAuth.instance.currentUser!.uid; 
 
-                // 🔹 cria a dieta com os campos padronizados
+                
                 final novaDieta = await dietasRef.add({
                   'alunoId': widget.alunoId,
                   'personalId': uid,
                   'refeicao': refeicaoController.text.trim(),
                   'detalhes': detalhesController.text.trim(),
-                  'criadoEm': FieldValue.serverTimestamp(), // ✅ campo padronizado
+                  'criadoEm': FieldValue.serverTimestamp(), 
                 });
 
-                // 🔹 garante a vinculação explícita ao aluno
+                
                 await FirebaseFirestore.instance
                     .collection('dietas')
                     .doc(novaDieta.id)
@@ -95,7 +95,7 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
 
                 if (mounted) Navigator.pop(context);
 
-                // 🔹 descarte seguro após fechar o diálogo
+                
                 refeicaoController.dispose();
                 detalhesController.dispose();
               },
@@ -241,7 +241,7 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
         stream: dietasRef
             .where('alunoId', isEqualTo: widget.alunoId)
             .where('personalId', isEqualTo: uid)
-            .orderBy('criadoEm', descending: true) // ✅ padronizado
+            .orderBy('criadoEm', descending: true) 
             .snapshots(includeMetadataChanges: true),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {

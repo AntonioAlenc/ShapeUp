@@ -2,11 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'treinos_personal_aluno_tela.dart';
 import 'dietas_personal_aluno_tela.dart';
-import 'progresso_personal_aluno_tela.dart'; // 🔹 novo import
+import 'progresso_personal_aluno_tela.dart'; 
 
 class AlunoDetalhesTela extends StatelessWidget {
   final String nomeAluno;
-  final String alunoId; // 🔹 agora recebemos o ID também
+  final String alunoId; 
 
   const AlunoDetalhesTela({
     super.key,
@@ -25,7 +25,7 @@ class AlunoDetalhesTela extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Aluno desvinculado com sucesso")),
         );
-        Navigator.pop(context); // volta para lista de alunos
+        Navigator.pop(context); 
       }
     } catch (e) {
       if (context.mounted) {
@@ -56,7 +56,7 @@ class AlunoDetalhesTela extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context); // fecha o dialog
+              Navigator.pop(context); 
               _desvincularAluno(context);
             },
             style: ElevatedButton.styleFrom(
@@ -82,7 +82,7 @@ class AlunoDetalhesTela extends StatelessWidget {
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
-            .doc(alunoId) // 🔹 busca direta pelo ID
+            .doc(alunoId) 
             .snapshots(),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
@@ -106,7 +106,6 @@ class AlunoDetalhesTela extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 🔹 Exibir informações básicas do aluno
                 Card(
                   color: Colors.grey[900],
                   margin: const EdgeInsets.only(bottom: 20),
@@ -130,7 +129,6 @@ class AlunoDetalhesTela extends StatelessWidget {
                   ),
                 ),
 
-                // 🔹 Botões de navegação
                 _botaoMenu(
                   context,
                   titulo: "Treinos",
@@ -141,7 +139,7 @@ class AlunoDetalhesTela extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (_) => TreinosPersonalAlunoTela(
                           nomeAluno: nomeAluno,
-                          alunoId: alunoId, // 🔹 passamos o ID aqui
+                          alunoId: alunoId, 
                         ),
                       ),
                     );
@@ -158,7 +156,7 @@ class AlunoDetalhesTela extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (_) => DietasPersonalAlunoTela(
                           nomeAluno: nomeAluno,
-                          alunoId: alunoId, // 🔹 passamos o ID aqui também
+                          alunoId: alunoId, 
                         ),
                       ),
                     );
@@ -167,13 +165,12 @@ class AlunoDetalhesTela extends StatelessWidget {
 
                 const SizedBox(height: 20),
 
-                // 🔹 Novo botão Progresso
                 _botaoMenu(
                   context,
                   titulo: "Progresso",
                   icone: Icons.trending_up,
                   onTap: () {
-                    final sexo = aluno["sexo"] ?? "masculino"; // 🔹 padrão seguro
+                    final sexo = aluno["sexo"] ?? "masculino"; 
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -189,7 +186,6 @@ class AlunoDetalhesTela extends StatelessWidget {
 
                 const SizedBox(height: 30),
 
-                // 🔹 Botão Desvincular (apenas se já estiver vinculado)
                 if (aluno["personalId"] != null)
                   ElevatedButton.icon(
                     onPressed: () => _confirmarDesvinculo(context),

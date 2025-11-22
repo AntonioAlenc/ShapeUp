@@ -65,7 +65,7 @@ class TreinoAlunoTela extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Nome do treino
+          
           Text(
             t.nome,
             style: const TextStyle(
@@ -76,14 +76,14 @@ class TreinoAlunoTela extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Descrição
+          
           if (t.descricao.isNotEmpty)
             Text(
               t.descricao,
               style: const TextStyle(color: Colors.white70),
             ),
 
-          // Frequência
+          
           if (t.frequencia.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 6.0),
@@ -95,7 +95,7 @@ class TreinoAlunoTela extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Lista de exercícios (nome, séries, obs)
+          
           ...t.exercicios.map(
                 (e) => Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
@@ -108,12 +108,12 @@ class TreinoAlunoTela extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Botão Finalizar
+         
           Align(
             alignment: Alignment.centerRight,
             child: ElevatedButton(
               onPressed: () {
-                // 🔹 Futuro: salvar no Firestore "concluidoEm"
+                
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Treino "${t.nome}" finalizado!')),
                 );

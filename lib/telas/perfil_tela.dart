@@ -55,14 +55,14 @@ class _PerfilTelaState extends State<PerfilTela> {
       'altura': double.tryParse(_alturaController.text),
     });
 
-    // pega o tipo de usuário
+   
     final snap = await ref.get();
     final dados = snap.data() ?? {};
     final tipo = (dados['tipo'] ?? 'aluno').toString().toLowerCase();
 
     if (!mounted) return;
 
-    // abre o menu correto
+   
     final rota = (tipo == 'personal') ? '/menu-personal' : '/menu-aluno';
     Navigator.pushReplacementNamed(context, rota);
   }

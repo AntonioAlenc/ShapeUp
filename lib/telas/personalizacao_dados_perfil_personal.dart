@@ -24,7 +24,7 @@ class _PersonalizacaoDadosPerfilPersonalState
   final TextEditingController _crefController = TextEditingController();
   final TextEditingController _telefoneController = TextEditingController();
 
-  // 🔹 Máscaras
+  
   final _alturaMask =
   MaskTextInputFormatter(mask: "#.##", filter: {"#": RegExp(r'[0-9]')});
   final _pesoMask =
@@ -32,7 +32,7 @@ class _PersonalizacaoDadosPerfilPersonalState
   final _telefoneMask = MaskTextInputFormatter(
       mask: "+## (##) #####-####", filter: {"#": RegExp(r'[0-9]')});
 
-  // 🔹 Snapshot original
+  
   Map<String, String> _dadosOriginais = {};
 
   @override
@@ -254,7 +254,7 @@ class _PersonalizacaoDadosPerfilPersonalState
     );
   }
 
-  // 🔹 Campo com estilo, máscara e validação
+  
   Widget _campoTexto(
       String label,
       TextEditingController controller, {

@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../modelos/treino.dart';
 import '../servicos/treino_service.dart';
-import 'treino_detalhe_tela.dart'; // 🔹 import necessário
+import 'treino_detalhe_tela.dart'; 
 
 class TreinoPersonalListaTela extends StatelessWidget {
   const TreinoPersonalListaTela({super.key});
@@ -99,4 +99,4 @@ class TreinoPersonalListaTela extends StatelessWidget {
     );
   }
 }
-//att
+

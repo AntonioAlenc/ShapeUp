@@ -16,10 +16,10 @@ class _CadastroTelaState extends State<CadastroTela> {
   final _senhaController = TextEditingController();
   String _tipoUsuario = 'aluno';
   bool _carregando = false;
-  bool _aceitouTermos = false; // 🔹 controle do checkbox
+  bool _aceitouTermos = false; 
   bool _mostrarSenha = false;
 
-  DateTime? _dataNascimento; // 🔹 nova variável
+  DateTime? _dataNascimento; 
 
   Future<void> _selecionarDataNascimento() async {
     final selecionada = await showDatePicker(
@@ -31,12 +31,12 @@ class _CadastroTelaState extends State<CadastroTela> {
         return Theme(
           data: ThemeData.dark().copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: Colors.amber,     // destaque (OK, seleção, mês/ano)
-              onPrimary: Colors.black,   // texto em cima do primary
-              surface: Colors.black,     // fundo principal
-              onSurface: Colors.white,   // texto normal
+              primary: Colors.amber,     
+              onPrimary: Colors.black,   
+              surface: Colors.black,     
+              onSurface: Colors.white,   
             ),
-            dialogBackgroundColor: Colors.grey, // fundo da caixa
+            dialogBackgroundColor: Colors.grey, 
           ),
           child: child!,
         );
@@ -75,7 +75,7 @@ class _CadastroTelaState extends State<CadastroTela> {
         email: _emailController.text.trim(),
         senha: _senhaController.text.trim(),
         tipoUsuario: _tipoUsuario,
-        dataNascimento: _dataNascimento, // 🔹 envio para o AuthService
+        dataNascimento: _dataNascimento, 
       );
 
       if (mounted) {
@@ -125,7 +125,7 @@ class _CadastroTelaState extends State<CadastroTela> {
       body: SafeArea(
         child: Column(
           children: [
-            // 🔹 Topo amarelo
+            
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -171,7 +171,7 @@ class _CadastroTelaState extends State<CadastroTela> {
             ),
             const SizedBox(height: 30),
 
-            // 🔹 Formulário
+            
             Expanded(
               child: Padding(
                 padding:
@@ -231,7 +231,7 @@ class _CadastroTelaState extends State<CadastroTela> {
                         ),
                         const SizedBox(height: 16),
 
-                        // 🔹 Data de nascimento
+
                         InkWell(
                           onTap: _selecionarDataNascimento,
                           child: InputDecorator(
@@ -285,7 +285,7 @@ class _CadastroTelaState extends State<CadastroTela> {
                         ),
                         const SizedBox(height: 16),
 
-                        // 🔹 Checkbox Termos
+                        
                         CheckboxListTile(
                           value: _aceitouTermos,
                           onChanged: (v) =>

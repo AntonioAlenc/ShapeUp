@@ -51,7 +51,7 @@ class PerfilPersonalTela extends StatelessWidget {
 
         final personal = snap.data!.data() as Map<String, dynamic>;
 
-        // 🔹 Tratamento da data de nascimento
+        
         String dataNascimentoTexto = "-";
         String idadeTexto = "-";
         if (personal["dataNascimento"] != null) {
@@ -87,7 +87,7 @@ class PerfilPersonalTela extends StatelessWidget {
 
                 const SizedBox(height: 12),
 
-                // 🔹 Exibir UID do personal
+                
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
@@ -119,7 +119,7 @@ class PerfilPersonalTela extends StatelessWidget {
 
                 const SizedBox(height: 24),
 
-                // 🔹 Botão Editar Dados
+               
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -149,7 +149,7 @@ class PerfilPersonalTela extends StatelessWidget {
 
                 const SizedBox(height: 12),
 
-                // 🔹 Botão Sair
+
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(

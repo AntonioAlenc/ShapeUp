@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class TreinosPersonalAlunoTela extends StatefulWidget {
   final String nomeAluno;
-  final String alunoId; // 🔹 agora também recebemos o ID do aluno
+  final String alunoId; 
 
   const TreinosPersonalAlunoTela({
     super.key,
@@ -150,7 +150,7 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
 
                 if (nomeController.text.trim().isEmpty) return;
 
-                final uid = FirebaseAuth.instance.currentUser!.uid; // 🔹 pega o personal logado
+                final uid = FirebaseAuth.instance.currentUser!.uid;
                 final treinosRef = FirebaseFirestore.instance.collection('treinos');
 
                 await treinosRef.add({
@@ -158,7 +158,7 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
                   'descricao': descController.text.trim(),
                   'exercicios': listaEx,
                   'alunoId': widget.alunoId,
-                  'personalId': uid, // 🔹 grava o personalId junto
+                  'personalId': uid, 
                   'dataCriacao': Timestamp.now(),
                 });
 
@@ -224,13 +224,13 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
               onPressed: () async {
                 if (nomeController.text.trim().isEmpty) return;
 
-                final uid = FirebaseAuth.instance.currentUser!.uid; // 🔹 mantém o personalId
+                final uid = FirebaseAuth.instance.currentUser!.uid; 
 
                 await FirebaseFirestore.instance.collection('treinos').doc(treinoId).update({
                   'nome': nomeController.text.trim(),
                   'descricao': descController.text.trim(),
                   'exercicios': exerciciosAtuais,
-                  'personalId': uid, // 🔹 garante que o personalId continua
+                  'personalId': uid, 
                 });
 
                 nomeController.dispose();
@@ -302,7 +302,7 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
         stream: FirebaseFirestore.instance
             .collection('treinos')
             .where('alunoId', isEqualTo: widget.alunoId)
-            .where('personalId', isEqualTo: uid) // 🔹 garante compatibilidade com regras
+            .where('personalId', isEqualTo: uid) 
             .snapshots(includeMetadataChanges: true),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {

@@ -48,7 +48,7 @@ class _ProgressoAlunoTelaState extends State<ProgressoAlunoTela> {
         final ultimo = docs.first.data() as Map<String, dynamic>;
         final medidas = Map<String, dynamic>.from(ultimo['medidas'] ?? {});
 
-        // 🔹 Botão para exportar o relatório em PDF
+       
         final botaoPDF = Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ElevatedButton.icon(
@@ -100,7 +100,7 @@ class _ProgressoAlunoTelaState extends State<ProgressoAlunoTela> {
     );
   }
 
-  // 🔹 Função para gerar PDF
+  
   Future<void> _gerarRelatorioPDF(List<QueryDocumentSnapshot> docs) async {
     try {
       RenderRepaintBoundary boundary =
@@ -197,7 +197,7 @@ class _ProgressoAlunoTelaState extends State<ProgressoAlunoTela> {
     }
   }
 
-  // 🔹 Seção de medições corporais
+  
   Widget _secaoMedidas(Map<String, dynamic> dados, Map<String, dynamic> medidas) {
     return _cardSecao(
       titulo: "Medições Corporais",
@@ -224,7 +224,7 @@ class _ProgressoAlunoTelaState extends State<ProgressoAlunoTela> {
     );
   }
 
-  // 🔹 Gráfico de evolução de peso
+ 
   Widget _secaoGraficoPeso(List<QueryDocumentSnapshot> docs) {
     final dados = docs.map((d) => d.data() as Map<String, dynamic>).toList();
     final pontos = <FlSpot>[];
@@ -297,7 +297,7 @@ class _ProgressoAlunoTelaState extends State<ProgressoAlunoTela> {
     );
   }
 
-  // 🔹 Gráfico de evolução das medidas
+ 
   Widget _secaoGraficoMedidas(List<QueryDocumentSnapshot> docs) {
     final dados = docs.map((d) => d.data() as Map<String, dynamic>).toList();
     final pontos = <FlSpot>[];
@@ -389,7 +389,7 @@ class _ProgressoAlunoTelaState extends State<ProgressoAlunoTela> {
     );
   }
 
-  // 🔹 Sem dados
+  
   Widget _semDados() {
     return Center(
       child: Padding(
@@ -410,7 +410,7 @@ class _ProgressoAlunoTelaState extends State<ProgressoAlunoTela> {
     );
   }
 
-  // 🔹 Utilitários visuais
+  
   Widget _medidaItem(String nome, String valor) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),

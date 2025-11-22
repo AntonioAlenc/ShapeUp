@@ -16,7 +16,7 @@ class MenuPersonalTela extends StatefulWidget {
 class _MenuPersonalTelaState extends State<MenuPersonalTela> {
   int _indiceSelecionado = 0;
 
-  // 🔹 Lista de avaliações simuladas (mantida por enquanto)
+  
   final List<Map<String, dynamic>> _avaliacoes = [
     {"aluno": "João Silva", "estrelas": 4.5},
     {"aluno": "Maria Souza", "estrelas": 5.0},
@@ -62,7 +62,7 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
             child: GestureDetector(
               onTap: () {
                 setState(() {
-                  _indiceSelecionado = 2; // 👉 Abre o Perfil do Personal
+                  _indiceSelecionado = 2; 
                 });
               },
               child: const CircleAvatar(
@@ -105,9 +105,9 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
     "Perfil",
   ];
 
-  // 🔹 Tela inicial do personal
+  
   Widget _telaInicio(BuildContext context) {
-    // média das avaliações simuladas
+    
     final double mediaAvaliacoes =
         _avaliacoes.fold(0.0, (sum, item) => sum + item["estrelas"]) /
             _avaliacoes.length;
@@ -123,7 +123,7 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Card de Gerenciar Alunos
+          
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -163,7 +163,7 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
             ),
           ),
 
-          // 🔹 Card de Quantidade de Alunos (dinâmico do Firestore)
+          
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('users')
@@ -220,7 +220,6 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
                         padding: const EdgeInsets.only(top: 8),
                         child: GestureDetector(
                           onTap: () {
-                            // 👉 abre a aba "Alunos"
                             setState(() {
                               _indiceSelecionado = 1;
                             });
@@ -243,7 +242,6 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
           ),
           const SizedBox(height: 20),
 
-          // Card de Avaliações
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),

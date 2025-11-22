@@ -57,7 +57,7 @@ class _TreinoCriarTelaState extends State<TreinoCriarTela> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    // converter controllers em lista de maps
+    
     final listaEx = _exerciciosControllers.map((ex) {
       return {
         "nome": ex["nome"]!.text.trim(),

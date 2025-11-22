@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-// importe suas telas reais
+
 import 'treino_aluno_tela.dart';
 import 'dieta_aluno_tela.dart';
 import 'progresso_aluno_tela.dart';
@@ -37,7 +37,7 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
     super.initState();
     _buscarNumeroPersonal();
 
-    // 🔹 configuração da animação
+    
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -156,7 +156,7 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
             child: GestureDetector(
               onTap: () {
                 setState(() {
-                  _indiceSelecionado = 4; // 👉 Abre a aba "Perfil"
+                  _indiceSelecionado = 4;
                 });
               },
               child: const CircleAvatar(
@@ -367,7 +367,7 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
     );
   }
 
-  // 🔹 Itens com ícone e animação sutil
+  
   Widget _itemTreino(Map<String, dynamic> treino) {
     final descricao = treino['descricao'] ?? "Treino";
     final exercicios = (treino['exercicios'] as List?) ?? [];
@@ -391,7 +391,7 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
             decoration: BoxDecoration(
-              color: Colors.transparent, // 🔹 Fundo removido
+              color: Colors.transparent, 
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -521,7 +521,7 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
         decoration: BoxDecoration(
-          color: Colors.transparent, // 🔹 Fundo removido
+          color: Colors.transparent, 
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(

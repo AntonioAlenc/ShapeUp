@@ -34,9 +34,9 @@ class PerfilAlunoTela extends StatelessWidget {
     return await picker.pickImage(source: ImageSource.gallery);
   }
 
-  // 🔥 MÉTODO FINAL – COMPLETO, FUNCIONA NO WEB E MOBILE
+  
   Future<void> _trocarFoto(BuildContext context, String uid) async {
-    final imagem = await _selecionarImagemWebOuMobile(); // AGORA FUNCIONA NO WEB
+    final imagem = await _selecionarImagemWebOuMobile(); 
 
     if (imagem == null) return;
 
@@ -141,7 +141,6 @@ class PerfilAlunoTela extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
 
-                  // FOTO DO PERFIL FINAL
                   Center(
                     child: GestureDetector(
                       onTap: () => _trocarFoto(context, user.uid),

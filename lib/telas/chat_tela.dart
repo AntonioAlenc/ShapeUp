@@ -19,7 +19,7 @@ class _ChatTelaState extends State<ChatTela> {
         _mensagemController.clear();
       });
 
-      // Simulação de resposta automática (opcional)
+      
       Future.delayed(const Duration(milliseconds: 500), () {
         setState(() {
           _mensagens.add(_Mensagem(texto: 'Recebido!', isMeu: false));

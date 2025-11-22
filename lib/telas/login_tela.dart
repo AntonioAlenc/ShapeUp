@@ -69,7 +69,7 @@ class _LoginTelaState extends State<LoginTela> {
       final dados = snap.data() ?? {};
       final tipo = (dados['tipo'] ?? 'aluno').toString().toLowerCase();
 
-      // 🔹 Salva preferências após login bem-sucedido
+      
       await _salvarPreferencias();
 
       final rota = (tipo == 'personal') ? '/menu-personal' : '/menu-aluno';
@@ -257,4 +257,3 @@ class _LoginTelaState extends State<LoginTela> {
     );
   }
 }
-//att

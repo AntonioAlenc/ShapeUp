@@ -388,7 +388,7 @@ class _ProgressoPersonalAlunoTelaState
 
   Future<void> _gerarRelatorioPDF(List<QueryDocumentSnapshot> docs) async {
     try {
-      // Captura o gráfico como imagem
+      
       RenderRepaintBoundary boundary =
       _graficoKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
@@ -396,12 +396,12 @@ class _ProgressoPersonalAlunoTelaState
       await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List? graficoBytes = byteData?.buffer.asUint8List();
 
-      // Cria o documento PDF
+    
       final pdf = pw.Document();
       final aluno = widget.nomeAluno;
       final dataGeracao = DateTime.now();
 
-      // Carrega a logo do ShapeUp
+      
       final logo = await imageFromAssetBundle('imagens/LogoVazada.png');
 
       pdf.addPage(
@@ -410,7 +410,7 @@ class _ProgressoPersonalAlunoTelaState
           margin: const pw.EdgeInsets.all(32),
           build: (pw.Context context) {
             return [
-              // 🔹 Cabeçalho estilizado com logo e título
+              
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
@@ -427,7 +427,7 @@ class _ProgressoPersonalAlunoTelaState
                       color: PdfColors.amber800,
                     ),
                   ),
-                  pw.SizedBox(width: 50), // espaçamento simétrico
+                  pw.SizedBox(width: 50), 
                 ],
               ),
               pw.SizedBox(height: 8),
@@ -457,7 +457,7 @@ class _ProgressoPersonalAlunoTelaState
               ],
               pw.SizedBox(height: 16),
 
-              // 🔹 Lista de registros
+             
               ...docs.map((d) {
                 final data = d.data() as Map<String, dynamic>;
                 final medidas = Map<String, dynamic>.from(data['medidas'] ?? {});
@@ -502,7 +502,7 @@ class _ProgressoPersonalAlunoTelaState
         ),
       );
 
-      // Exibe o PDF
+     
       await Printing.layoutPdf(
         onLayout: (PdfPageFormat format) async => pdf.save(),
       );

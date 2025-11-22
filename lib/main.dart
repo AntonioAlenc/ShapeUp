@@ -1,7 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart'; // ✅ Importação para pt_BR e formato 24h
+import 'package:flutter_localizations/flutter_localizations.dart'; 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -37,7 +37,7 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 🔹 Inicializa lembretes locais apenas em mobile
+
   if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
     await FirebaseLembreteService.init();
   }
@@ -54,7 +54,7 @@ class MeuAplicativo extends StatelessWidget {
       title: 'ShapeUp',
       debugShowCheckedModeBanner: false,
 
-      // ✅ Suporte completo ao idioma e formato pt_BR (datas e horas)
+       
       supportedLocales: const [
         Locale('pt', 'BR'),
       ],
@@ -65,7 +65,7 @@ class MeuAplicativo extends StatelessWidget {
       ],
       locale: const Locale('pt', 'BR'),
 
-      // ✅ Força o formato 24h
+    
       builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
@@ -83,7 +83,7 @@ class MeuAplicativo extends StatelessWidget {
         ),
       ),
 
-      // 🔹 Rotas do app
+     
       routes: {
         '/login': (context) => const LoginTela(),
         '/cadastro': (context) => const CadastroTela(),
