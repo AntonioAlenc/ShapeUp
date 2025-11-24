@@ -63,23 +63,34 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
     final alunoDoc =
     await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
 
-    if (alunoDoc.exists && alunoDoc.data()?['personalId'] != null) {
-      final personalId = alunoDoc['personalId'];
-      final personalDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(personalId)
-          .get();
+    if (!alunoDoc.exists) return;
 
-      if (personalDoc.exists && personalDoc.data()?['telefone'] != null) {
-        setState(() {
-          numeroPersonal = personalDoc['telefone'];
-        });
-      }
+    final personalId = alunoDoc.data()?['personalId'];
+    if (personalId == null) return;
+
+    final personalDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(personalId)
+        .get();
+
+    print("🔥 Telefone vindo do Firestore: ${personalDoc.data()?['telefone']}");
+
+    if (!personalDoc.exists) return;
+
+    final personal = personalDoc.data() as Map<String, dynamic>;
+
+    final telefone = personal['telefone'];
+
+    if (telefone != null && telefone.toString().isNotEmpty) {
+      setState(() {
+        numeroPersonal = telefone.toString();
+      });
     }
   }
 
+
   Future<void> _abrirWhatsApp() async {
-    if (numeroPersonal == null) {
+    if (numeroPersonal == null || numeroPersonal!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Seu personal não possui telefone cadastrado."),
@@ -89,10 +100,20 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
       return;
     }
 
-    String numeroFormatado =
-    numeroPersonal!.replaceAll(' ', '').replaceAll('-', '');
+    // remove tudo que não for número
+    String numeroLimpo = numeroPersonal!.replaceAll(RegExp(r'[^0-9]'), '');
 
-    final Uri url = Uri.parse("https://wa.me/$numeroFormatado");
+    // se começar com 0, remove
+    if (numeroLimpo.startsWith('0')) {
+      numeroLimpo = numeroLimpo.substring(1);
+    }
+
+    // se não começar com 55, adiciona
+    if (!numeroLimpo.startsWith('55')) {
+      numeroLimpo = "55$numeroLimpo";
+    }
+
+    final Uri url = Uri.parse("https://wa.me/$numeroLimpo");
 
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       ScaffoldMessenger.of(context).showSnackBar(

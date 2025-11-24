@@ -20,15 +20,15 @@ class _PersonalizacaoDadosPerfilAlunoState
   final TextEditingController _sexoController = TextEditingController();
   final TextEditingController _alturaController = TextEditingController();
   final TextEditingController _pesoController = TextEditingController();
-  final TextEditingController _idiomaController = TextEditingController();
+  final TextEditingController _dataNascController = TextEditingController();
 
- 
   final _alturaMask =
   MaskTextInputFormatter(mask: "#.##", filter: {"#": RegExp(r'[0-9]')});
   final _pesoMask =
   MaskTextInputFormatter(mask: "##0.0", filter: {"#": RegExp(r'[0-9]')});
+  final _dataMask = MaskTextInputFormatter(
+      mask: "##/##/####", filter: {"#": RegExp(r'[0-9]')});
 
-  
   Map<String, String> _dadosOriginais = {};
 
   @override
@@ -46,19 +46,28 @@ class _PersonalizacaoDadosPerfilAlunoState
 
     if (alunoDoc.exists) {
       final aluno = alunoDoc.data()!;
+
+      String dataFormatada = "";
+      if (aluno['dataNascimento'] != null) {
+        Timestamp ts = aluno['dataNascimento'];
+        DateTime dt = ts.toDate();
+        dataFormatada =
+        "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}";
+      }
+
       setState(() {
         _nomeController.text = aluno['nome'] ?? '';
         _sexoController.text = aluno['sexo'] ?? '';
         _alturaController.text = aluno['altura']?.toString() ?? '';
         _pesoController.text = aluno['peso']?.toString() ?? '';
-        _idiomaController.text = aluno['idioma'] ?? 'PT-BR';
+        _dataNascController.text = dataFormatada;
 
         _dadosOriginais = {
           'nome': _nomeController.text,
           'sexo': _sexoController.text,
           'altura': _alturaController.text,
           'peso': _pesoController.text,
-          'idioma': _idiomaController.text,
+          'dataNascimento': _dataNascController.text,
         };
       });
     }
@@ -69,11 +78,10 @@ class _PersonalizacaoDadosPerfilAlunoState
         _sexoController.text != _dadosOriginais['sexo'] ||
         _alturaController.text != _dadosOriginais['altura'] ||
         _pesoController.text != _dadosOriginais['peso'] ||
-        _idiomaController.text != _dadosOriginais['idioma'];
+        _dataNascController.text != _dadosOriginais['dataNascimento'];
   }
 
   Future<void> _salvarAlteracoes() async {
-    
     if (!_houveAlteracao()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -92,12 +100,24 @@ class _PersonalizacaoDadosPerfilAlunoState
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+    Timestamp? tsDataNasc;
+    if (_dataNascController.text.isNotEmpty) {
+      final partes = _dataNascController.text.split('/');
+      final dia = int.tryParse(partes[0]);
+      final mes = int.tryParse(partes[1]);
+      final ano = int.tryParse(partes[2]);
+
+      if (dia != null && mes != null && ano != null) {
+        tsDataNasc = Timestamp.fromDate(DateTime(ano, mes, dia));
+      }
+    }
+
     await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
       'nome': _nomeController.text,
       'sexo': _sexoController.text,
       'altura': _alturaController.text,
       'peso': _pesoController.text,
-      'idioma': _idiomaController.text,
+      'dataNascimento': tsDataNasc
     });
 
     if (mounted) {
@@ -113,7 +133,6 @@ class _PersonalizacaoDadosPerfilAlunoState
   }
 
   Future<void> _confirmarCancelar() async {
-    
     if (!_houveAlteracao()) {
       Navigator.pop(context);
       return;
@@ -142,9 +161,7 @@ class _PersonalizacaoDadosPerfilAlunoState
       },
     );
 
-    if (sair == true && mounted) {
-      Navigator.pop(context);
-    }
+    if (sair == true && mounted) Navigator.pop(context);
   }
 
   @override
@@ -185,12 +202,15 @@ class _PersonalizacaoDadosPerfilAlunoState
                     obrigatorio: false,
                     tipo: TextInputType.number,
                     mascara: _pesoMask),
-                _campoTexto("Idioma", _idiomaController,
-                    obrigatorio: false, tipo: TextInputType.text),
+
+                /// NOVO CAMPO
+                _campoTexto("Data de Nascimento", _dataNascController,
+                    obrigatorio: false,
+                    tipo: TextInputType.number,
+                    mascara: _dataMask),
 
                 const SizedBox(height: 20),
 
-                
                 Row(
                   children: [
                     Expanded(
@@ -239,7 +259,6 @@ class _PersonalizacaoDadosPerfilAlunoState
     );
   }
 
-  
   Widget _campoTexto(
       String label,
       TextEditingController controller, {
@@ -267,10 +286,8 @@ class _PersonalizacaoDadosPerfilAlunoState
           if (obrigatorio && (valor == null || valor.trim().isEmpty)) {
             return "Preencha o campo $label";
           }
-          if (tipo == TextInputType.number && valor != null && valor.isNotEmpty) {
-            if (double.tryParse(valor.replaceAll(',', '.')) == null) {
-              return "$label deve ser numérico";
-            }
+          if (label == "Data de Nascimento" && valor != null && valor.isNotEmpty) {
+            if (valor.length != 10) return "Data inválida";
           }
           return null;
         },

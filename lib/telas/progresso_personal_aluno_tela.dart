@@ -38,6 +38,15 @@ class _ProgressoPersonalAlunoTelaState
   final GlobalKey _graficoKey = GlobalKey();
 
   String _medidaSelecionada = "Peso";
+  final List<String> metricas = [
+    "Peso",
+    "bracoDireito",
+    "bracoEsquerdo",
+    "coxaDireita",
+    "coxaEsquerda",
+    "cintura",
+    "quadril",
+  ];
   DateTime _dataSelecionada = DateTime.now();
 
   @override
@@ -625,15 +634,46 @@ class _ProgressoPersonalAlunoTelaState
                   label: const Text("Exportar Relatório em PDF"),
                 ),
                 const SizedBox(height: 16),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _botaoFiltro("Peso"),
-                      ..._medidasControllers.keys.map(_botaoFiltro),
-                    ],
+
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.stacked_line_chart, color: Colors.black),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DropdownButton<String>(
+                            value: _medidaSelecionada,
+                            isExpanded: true,
+                            dropdownColor: Colors.black,
+                            iconEnabledColor: Colors.black,
+                            style: const TextStyle(color: Colors.white),
+
+                            items: metricas.map((m) {
+                              return DropdownMenuItem(
+                                value: m,
+                                child: Text(
+                                  m,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              );
+                            }).toList(),
+
+                            onChanged: (valor) {
+                              setState(() => _medidaSelecionada = valor!);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+
                 const SizedBox(height: 16),
                 RepaintBoundary(
                   key: _graficoKey,
@@ -761,15 +801,30 @@ class _ProgressoPersonalAlunoTelaState
 
   Widget _botaoFiltro(String tipo) {
     final ativo = _medidaSelecionada == tipo;
+
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: ativo ? Colors.amber : Colors.grey[800],
-          foregroundColor: ativo ? Colors.black : Colors.white,
+      padding: const EdgeInsets.only(right: 6),
+      child: GestureDetector(
+        onTap: () => setState(() => _medidaSelecionada = tipo),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          decoration: BoxDecoration(
+            color: ativo ? Colors.amber : Colors.grey[850],
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: ativo ? Colors.amber : Colors.grey[700]!,
+              width: 1.2,
+            ),
+          ),
+          child: Text(
+            tipo,
+            style: TextStyle(
+              color: ativo ? Colors.black : Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ),
         ),
-        onPressed: () => setState(() => _medidaSelecionada = tipo),
-        child: Text(tipo),
       ),
     );
   }

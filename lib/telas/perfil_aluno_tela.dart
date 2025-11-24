@@ -22,10 +22,12 @@ class PerfilAlunoTela extends StatelessWidget {
   int _calcularIdade(DateTime nascimento) {
     final hoje = DateTime.now();
     int idade = hoje.year - nascimento.year;
+
     if (hoje.month < nascimento.month ||
         (hoje.month == nascimento.month && hoje.day < nascimento.day)) {
       idade--;
     }
+
     return idade;
   }
 
@@ -34,9 +36,8 @@ class PerfilAlunoTela extends StatelessWidget {
     return await picker.pickImage(source: ImageSource.gallery);
   }
 
-  
   Future<void> _trocarFoto(BuildContext context, String uid) async {
-    final imagem = await _selecionarImagemWebOuMobile(); 
+    final imagem = await _selecionarImagemWebOuMobile();
 
     if (imagem == null) return;
 
@@ -56,7 +57,6 @@ class PerfilAlunoTela extends StatelessWidget {
     }
   }
 
-
   Future<String?> _uploadFoto(XFile imagem, String uid) async {
     try {
       final ref = FirebaseStorage.instance
@@ -66,17 +66,13 @@ class PerfilAlunoTela extends StatelessWidget {
 
       if (kIsWeb) {
         Uint8List bytes = await imagem.readAsBytes();
-        await ref.putData(
-          bytes,
-          SettableMetadata(contentType: 'image/jpeg'),
-        );
+        await ref.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
         return await ref.getDownloadURL();
       }
 
       final file = File(imagem.path);
       await ref.putFile(file);
       return await ref.getDownloadURL();
-
     } catch (e) {
       print("🔥 Erro ao fazer upload da imagem: $e");
       return null;
@@ -114,14 +110,22 @@ class PerfilAlunoTela extends StatelessWidget {
         final aluno = snap.data!.data() as Map<String, dynamic>;
         final personalId = aluno["personalId"];
 
+        // 📌 Lógica corrigida
         String dataNascimentoTexto = "-";
         String idadeTexto = "-";
+
         if (aluno["dataNascimento"] != null) {
-          final ts = aluno["dataNascimento"] as Timestamp;
-          final nascimento = ts.toDate();
-          dataNascimentoTexto =
-          "${nascimento.day.toString().padLeft(2, '0')}/${nascimento.month.toString().padLeft(2, '0')}/${nascimento.year}";
-          idadeTexto = _calcularIdade(nascimento).toString();
+          try {
+            final ts = aluno["dataNascimento"] as Timestamp;
+            final nascimento = ts.toDate();
+
+            dataNascimentoTexto =
+            "${nascimento.day.toString().padLeft(2, '0')}/${nascimento.month.toString().padLeft(2, '0')}/${nascimento.year}";
+
+            idadeTexto = _calcularIdade(nascimento).toString();
+          } catch (e) {
+            print("Erro ao converter data de nascimento: $e");
+          }
         }
 
         return SingleChildScrollView(
@@ -140,11 +144,9 @@ class PerfilAlunoTela extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-
                   Center(
                     child: GestureDetector(
                       onTap: () => _trocarFoto(context, user.uid),
-
                       child: aluno["fotoUrl"] != null &&
                           aluno["fotoUrl"].toString().isNotEmpty
                           ? ClipOval(

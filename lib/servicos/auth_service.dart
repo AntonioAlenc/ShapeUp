@@ -61,7 +61,7 @@ class AuthService {
           ...baseData,
           'sexo': null,
           'objetivo': null,
-          'personalId': null, // 🔹 aluno sempre começa sem personal vinculado
+          'personalId': null,
         });
       } else if (tipoUsuario == 'personal') {
         await _db.collection('users').doc(uid).set({

@@ -16,15 +16,6 @@ class MenuPersonalTela extends StatefulWidget {
 class _MenuPersonalTelaState extends State<MenuPersonalTela> {
   int _indiceSelecionado = 0;
 
-  
-  final List<Map<String, dynamic>> _avaliacoes = [
-    {"aluno": "João Silva", "estrelas": 4.5},
-    {"aluno": "Maria Souza", "estrelas": 5.0},
-    {"aluno": "Carlos Pereira", "estrelas": 4.0},
-    {"aluno": "Ana Lima", "estrelas": 3.5},
-    {"aluno": "Lucas Silveira", "estrelas": 4.0},
-  ];
-
   late final List<Widget> _telas;
 
   @override
@@ -62,7 +53,7 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
             child: GestureDetector(
               onTap: () {
                 setState(() {
-                  _indiceSelecionado = 2; 
+                  _indiceSelecionado = 2;
                 });
               },
               child: const CircleAvatar(
@@ -105,13 +96,7 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
     "Perfil",
   ];
 
-  
   Widget _telaInicio(BuildContext context) {
-    
-    final double mediaAvaliacoes =
-        _avaliacoes.fold(0.0, (sum, item) => sum + item["estrelas"]) /
-            _avaliacoes.length;
-
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       return const Center(
@@ -123,7 +108,9 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          
+          // -----------------------------
+          // CARD GERENCIAR ALUNOS
+          // -----------------------------
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -163,7 +150,9 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
             ),
           ),
 
-          
+          // -----------------------------
+          // LISTA DE ALUNOS
+          // -----------------------------
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('users')
@@ -191,7 +180,9 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
 
               final alunos = snapshot.data!.docs;
               final totalAlunos = alunos.length;
-              final alunosResumo = alunos.take(4).toList();
+
+              // MOSTRA ATÉ 10 ALUNOS
+              final alunosResumo = alunos.take(10).toList();
 
               return Container(
                 width: double.infinity,
@@ -213,9 +204,12 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
                     ),
                     const Divider(color: Colors.black),
                     const SizedBox(height: 8),
+
+                    // Lista de até 10 nomes
                     for (var aluno in alunosResumo)
                       _linhaAluno(aluno['nome'] ?? "Sem nome"),
-                    if (totalAlunos > 4)
+
+                    if (totalAlunos > 10)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: GestureDetector(
@@ -240,54 +234,10 @@ class _MenuPersonalTelaState extends State<MenuPersonalTela> {
               );
             },
           ),
+
           const SizedBox(height: 20),
 
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.amber,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "AVALIAÇÕES :",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: List.generate(
-                    5,
-                        (index) => Icon(
-                      index < mediaAvaliacoes
-                          ? Icons.star
-                          : Icons.star_border,
-                      color: Colors.black,
-                      size: 28,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(
-                    4,
-                        (index) => const CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Colors.black,
-                      child: Icon(Icons.person, color: Colors.amber),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // ❌ AVALIAÇÕES REMOVIDO COMPLETAMENTE
         ],
       ),
     );
