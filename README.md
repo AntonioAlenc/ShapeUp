@@ -36,44 +36,43 @@ O **ShapeUp** é um aplicativo mobile desenvolvido em **Flutter** para auxiliar 
 ## 📁 Estrutura de Pastas
 
 lib/
-│
-├── aluno_detalhes_tela.dart
-├── alunos_tela.dart
-├── cadastro_tela.dart
-├── carregamento_tela.dart
-├── chat_tela.dart
-│
-├── dieta_aluno_tela.dart
-├── dieta_personal_tela.dart
-├── dietas_personal_aluno_tela.dart
-│
-├── login_tela.dart
-│
-├── menu_aluno_tela.dart
-├── menu_personal_tela.dart
-│
-├── perfil_aluno_tela.dart
-├── perfil_personal_tela.dart
-├── perfil_tela.dart
-│
-├── personalizacao_dados_perfil_aluno.dart
-├── personalizacao_dados_perfil_personal.dart
-│
-├── placeholder_telas.dart
-│
-├── progresso_aluno_tela.dart
-├── progresso_personal_aluno_tela.dart
-│
-├── recuperacao_senha_tela.dart
-│
-├── treino_aluno_tela.dart
-├── treino_atribuir_tela.dart
-├── treino_criar_tela.dart
-├── treino_detalhe_tela.dart
-├── treino_personal_lista_tela.dart
-├── treinos_personal_aluno_tela.dart
-│
-└── vincular_aluno_tela.dart
+├── aluno_detalhes_tela.dart  
+├── alunos_tela.dart  
+├── cadastro_tela.dart  
+├── carregamento_tela.dart  
+├── chat_tela.dart  
+│  
+├── dieta_aluno_tela.dart  
+├── dieta_personal_tela.dart  
+├── dietas_personal_aluno_tela.dart  
+│  
+├── login_tela.dart  
+│  
+├── menu_aluno_tela.dart  
+├── menu_personal_tela.dart  
+│  
+├── perfil_aluno_tela.dart  
+├── perfil_personal_tela.dart  
+├── perfil_tela.dart  
+│  
+├── personalizacao_dados_perfil_aluno.dart  
+├── personalizacao_dados_perfil_personal.dart  
+│  
+├── placeholder_telas.dart  
+│  
+├── progresso_aluno_tela.dart  
+├── progresso_personal_aluno_tela.dart  
+│  
+├── recuperacao_senha_tela.dart  
+│  
+├── treino_aluno_tela.dart  
+├── treino_atribuir_tela.dart  
+├── treino_criar_tela.dart  
+├── treino_detalhe_tela.dart  
+├── treino_personal_lista_tela.dart  
+├── treinos_personal_aluno_tela.dart  
+│  
+└── vincular_aluno_tela.dart  
 
 
 ---
@@ -82,6 +81,7 @@ lib/
 
 flutter pub get
 flutter run
+
 
 
 ---
