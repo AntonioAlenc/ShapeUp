@@ -99,8 +99,8 @@ class Treino {
       concluidoEm: (data['concluidoEm'] as Timestamp?)?.toDate(),
       validadeSemana: (data['validadeSemana'] as Timestamp?)?.toDate(),
 
-      criadoEm: (data['dataCriacao'] as Timestamp?)?.toDate() ??
-          DateTime.now(),
+      criadoEm: (data['dataCriacao'] as Timestamp?)?.toDate()
+          ?? DateTime(2021, 1, 1),
       atualizadoEm: (data['atualizadoEm'] as Timestamp?)?.toDate(),
     );
   }
