@@ -29,8 +29,7 @@ class _TreinoAlunoTelaState extends State<TreinoAlunoTela>
     super.initState();
     _tabController = TabController(length: dias.length, vsync: this);
 
-    // Selecionar aba do dia atual automaticamente
-    final dow = DateTime.now().weekday - 1; // 0 = segunda
+    final dow = DateTime.now().weekday - 1; // segunda=0
     if (dow >= 0 && dow < dias.length) {
       _tabController.index = dow;
     }
@@ -55,44 +54,57 @@ class _TreinoAlunoTelaState extends State<TreinoAlunoTela>
   }
 
   // ---------------------------------------------------------
-  // 🔥 Cartão visual do treino
+  // 🔥 CARD GRANDE (VERSÃO ORIGINAL, SEM BOTÃO)
   // ---------------------------------------------------------
   Widget _cardTreino(BuildContext context, Treino t) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: t.concluido ? Colors.grey[850] : Colors.grey[900],
+        color: Colors.grey[900],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: t.concluido ? Colors.green : Colors.amber,
+          color: Colors.amber,
           width: 1.2,
         ),
       ),
+
+      // Mantém o mesmo tamanho visual de antes
+      constraints: const BoxConstraints(
+        minHeight: 180,   // <-- AQUI GARANTE O CARD GRANDE
+      ),
+
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             t.nome,
-            style: TextStyle(
-              color: t.concluido ? Colors.green : Colors.amber,
-              fontSize: 18,
+            style: const TextStyle(
+              color: Colors.amber,
+              fontSize: 20, // maior como antes
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+
+          const SizedBox(height: 10),
 
           if (t.descricao.isNotEmpty)
             Text(
               t.descricao,
-              style: const TextStyle(color: Colors.white70),
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+              ),
             ),
 
           if (t.frequencia.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 6.0),
+              padding: const EdgeInsets.only(top: 10.0),
               child: Text(
                 "Frequência: ${t.frequencia}",
-                style: const TextStyle(color: Colors.white54, fontSize: 13),
+                style: const TextStyle(
+                  color: Colors.white54,
+                  fontSize: 14,
+                ),
               ),
             ),
 
@@ -100,47 +112,18 @@ class _TreinoAlunoTelaState extends State<TreinoAlunoTela>
 
           ...t.exercicios.map(
                 (e) => Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
+              padding: const EdgeInsets.only(bottom: 10.0),
               child: Text(
                 "${e['nome'] ?? ''} - ${e['series'] ?? ''}\nObs: ${e['observacao'] ?? ''}",
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton(
-              onPressed: t.concluido
-                  ? null
-                  : () async {
-                await TreinoService.instancia.finalizarTreino(t.id);
-
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content:
-                        Text('Treino "${t.nome}" finalizado!')),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                t.concluido ? Colors.green : Colors.amber,
-                foregroundColor:
-                t.concluido ? Colors.white : Colors.black,
-                padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 15, // maior como antes
                 ),
               ),
-              child:
-              Text(t.concluido ? "Concluído ✔" : "Finalizar"),
             ),
           ),
+
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -166,8 +149,7 @@ class _TreinoAlunoTelaState extends State<TreinoAlunoTela>
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title:
-        const Text('Meus Treinos', style: TextStyle(color: Colors.amber)),
+        title: const Text('Meus Treinos', style: TextStyle(color: Colors.amber)),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -185,7 +167,7 @@ class _TreinoAlunoTelaState extends State<TreinoAlunoTela>
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final lista = snap.data ?? [];
+              var lista = snap.data ?? [];
 
               if (lista.isEmpty) {
                 return Center(
@@ -203,7 +185,7 @@ class _TreinoAlunoTelaState extends State<TreinoAlunoTela>
                   return Column(
                     children: [
                       _cardTreino(context, lista[i]),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                     ],
                   );
                 },
