@@ -17,6 +17,19 @@ class _TreinoCriarTelaState extends State<TreinoCriarTela> {
   final _freq = TextEditingController();
   Treino? _edicao;
 
+  // 🔥 NOVO CAMPO — dia da semana selecionado
+  String diaSelecionado = "segunda";
+
+  final dias = [
+    "segunda",
+    "terca",
+    "quarta",
+    "quinta",
+    "sexta",
+    "sabado",
+    "domingo",
+  ];
+
   List<Map<String, TextEditingController>> _exerciciosControllers = [];
 
   @override
@@ -28,6 +41,7 @@ class _TreinoCriarTelaState extends State<TreinoCriarTela> {
       _nome.text = arg.nome;
       _desc.text = arg.descricao;
       _freq.text = arg.frequencia;
+      diaSelecionado = arg.diaSemana; // 🔥 mantém dia original
 
       _exerciciosControllers = arg.exercicios.map((ex) {
         return {
@@ -57,37 +71,44 @@ class _TreinoCriarTelaState extends State<TreinoCriarTela> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    
     final listaEx = _exerciciosControllers.map((ex) {
       return {
         "nome": ex["nome"]!.text.trim(),
         "series": ex["series"]!.text.trim(),
-        "observacao": ex["obs"]!.text.trim(),
+        "observacao": ex["observacao"]!.text.trim(),
       };
     }).where((ex) => ex["nome"]!.isNotEmpty).toList();
 
     if (_edicao == null) {
+      // 🔥 Criar novo treino
       final novo = Treino.novo(
         nome: _nome.text.trim(),
         descricao: _desc.text.trim(),
         frequencia: _freq.text.trim(),
         exercicios: listaEx,
         personalId: uid,
+        diaSemana: diaSelecionado, // 🔥 dia da semana
       );
+
       final id = await TreinoService.instancia.salvarTreino(novo);
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Treino criado (id $id)')),
       );
     } else {
+      // 🔥 Atualizar treino existente
       final atualizado = _edicao!.copyWith(
         nome: _nome.text.trim(),
         descricao: _desc.text.trim(),
         frequencia: _freq.text.trim(),
         exercicios: listaEx,
+        diaSemana: diaSelecionado,
         atualizadoEm: DateTime.now(),
       );
+
       await TreinoService.instancia.atualizarTreino(_edicao!.id, atualizado);
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Treino atualizado')),
@@ -108,6 +129,33 @@ class _TreinoCriarTelaState extends State<TreinoCriarTela> {
     ),
   );
 
+  // 🔥 Componente visual do seletor de dias
+  Widget _diaItem(String dia) {
+    final selecionado = diaSelecionado == dia;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() => diaSelecionado = dia);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        margin: const EdgeInsets.only(right: 8),
+        decoration: BoxDecoration(
+          color: selecionado ? Colors.amber : Colors.grey[900],
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.amber, width: 1),
+        ),
+        child: Text(
+          dia.toUpperCase(),
+          style: TextStyle(
+            color: selecionado ? Colors.black : Colors.amber,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final editando = _edicao != null;
@@ -122,6 +170,21 @@ class _TreinoCriarTelaState extends State<TreinoCriarTela> {
           key: _formKey,
           child: ListView(
             children: [
+              // 🔥 Seletor de dia da semana
+              const Text(
+                "Dia da Semana",
+                style: TextStyle(color: Colors.amber, fontSize: 18),
+              ),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: dias.map((dia) => _diaItem(dia)).toList(),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
               TextFormField(
                 controller: _nome,
                 style: const TextStyle(color: Colors.white),

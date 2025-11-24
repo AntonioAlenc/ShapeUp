@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-
 import 'treino_aluno_tela.dart';
 import 'dieta_aluno_tela.dart';
 import 'progresso_aluno_tela.dart';
@@ -21,23 +20,16 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
     with SingleTickerProviderStateMixin {
   int _indiceSelecionado = 0;
   String? numeroPersonal;
+
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
-
-  final Map<String, double> valores = {
-    "Jan": 15.0,
-    "Fev": 12.0,
-    "Mar": 18.0,
-    "Abr": 25.0,
-  };
 
   @override
   void initState() {
     super.initState();
     _buscarNumeroPersonal();
 
-    
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -154,11 +146,7 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _indiceSelecionado = 4;
-                });
-              },
+              onTap: () => setState(() => _indiceSelecionado = 4),
               child: const CircleAvatar(
                 backgroundColor: Colors.amber,
                 child: Icon(Icons.person, color: Colors.black),
@@ -175,26 +163,13 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
         unselectedItemColor: Colors.white70,
         type: BottomNavigationBarType.fixed,
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Início"),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "Início",
-          ),
+              icon: Icon(Icons.fitness_center), label: "Treino"),
+          BottomNavigationBarItem(icon: Icon(Icons.restaurant), label: "Dieta"),
           BottomNavigationBarItem(
-            icon: Icon(Icons.fitness_center),
-            label: "Treino",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant),
-            label: "Dieta",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.show_chart),
-            label: "Progresso",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "Perfil",
-          ),
+              icon: Icon(Icons.show_chart), label: "Progresso"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Perfil"),
           BottomNavigationBarItem(
             icon: FaIcon(FontAwesomeIcons.whatsapp, color: Colors.green),
             label: "WhatsApp",
@@ -205,15 +180,15 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
     );
   }
 
+  // -------------------------------------------------------------
+  // 🟡 TELA INICIAL (Início)
+  // -------------------------------------------------------------
   Widget _telaInicio(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       return const Center(
-        child: Text(
-          "Usuário não autenticado",
-          style: TextStyle(color: Colors.white),
-        ),
-      );
+          child: Text("Usuário não autenticado",
+              style: TextStyle(color: Colors.white)));
     }
 
     return SingleChildScrollView(
@@ -234,11 +209,6 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
                 titulo: "Dietas Recentes",
                 child: _streamDietas(user.uid),
               ),
-              const SizedBox(height: 16),
-              _cardSecao(
-                titulo: "Progresso",
-                child: _graficoProgresso(),
-              ),
             ],
           ),
         ),
@@ -246,6 +216,9 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
     );
   }
 
+  // -------------------------------------------------------------
+  // 🔥 TREINOS RECENTES
+  // -------------------------------------------------------------
   Widget _streamTreinos(String uid) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -257,9 +230,9 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Center(
-            child: CircularProgressIndicator(color: Colors.amber),
-          );
+              child: CircularProgressIndicator(color: Colors.amber));
         }
+
         final docs = snapshot.data!.docs;
         if (docs.isEmpty) {
           return const Text("Nenhum treino atribuído.",
@@ -278,9 +251,6 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.amber,
                   foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
                 ),
                 child: const Text("VER TODOS OS TREINOS"),
               ),
@@ -291,20 +261,23 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
     );
   }
 
+  // -------------------------------------------------------------
+  // ⭐ DIETAS RECENTES (NOVO MODELO)
+  // -------------------------------------------------------------
   Widget _streamDietas(String uid) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('dietas')
           .where('alunoId', isEqualTo: uid)
-          .orderBy('criadoEm', descending: true)
+          .orderBy(FieldPath.documentId, descending: true)
           .limit(3)
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Center(
-            child: CircularProgressIndicator(color: Colors.amber),
-          );
+              child: CircularProgressIndicator(color: Colors.amber));
         }
+
         final docs = snapshot.data!.docs;
         if (docs.isEmpty) {
           return const Text("Nenhuma dieta atribuída.",
@@ -314,8 +287,11 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (var doc in docs) _itemDieta(doc.data() as Map<String, dynamic>),
+            for (var doc in docs)
+              _itemDieta(doc.data() as Map<String, dynamic>, doc.id),
+
             const SizedBox(height: 12),
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -323,188 +299,24 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.amber,
                   foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
                 ),
                 child: const Text("VER TODAS AS DIETAS"),
               ),
-            ),
+            )
           ],
         );
       },
     );
   }
 
-  Widget _graficoProgresso() {
-    return SizedBox(
-      height: 200,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: valores.entries.map((entry) {
-          final mes = entry.key;
-          final valor = entry.value;
-          final altura = (valor / 30) * 180;
+  // -------------------------------------------------------------
+  // CARD DE 1 DIETA (compatível com novo modelo)
+  // -------------------------------------------------------------
+  Widget _itemDieta(Map<String, dynamic> dieta, String id) {
+    final periodo = (dieta['periodo'] ?? '').toString();
+    final texto = (dieta['texto'] ?? '').toString();
 
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Container(
-                width: 30,
-                height: altura,
-                decoration: BoxDecoration(
-                  color: Colors.amber,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(mes, style: const TextStyle(color: Colors.white70)),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  
-  Widget _itemTreino(Map<String, dynamic> treino) {
-    final descricao = treino['descricao'] ?? "Treino";
-    final exercicios = (treino['exercicios'] as List?) ?? [];
-    final data = treino['dataCriacao'] != null
-        ? (treino['dataCriacao'] as Timestamp).toDate()
-        : null;
-
-    final hoje = DateTime.now();
-    final ehHoje = data != null &&
-        data.year == hoje.year &&
-        data.month == hoje.month &&
-        data.day == hoje.day;
-
-    return AnimatedOpacity(
-      duration: const Duration(milliseconds: 400),
-      opacity: 1,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-            decoration: BoxDecoration(
-              color: Colors.transparent, 
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      descricao,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (ehHoje)
-                      Container(
-                        margin: const EdgeInsets.only(left: 8),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(color: Colors.white30),
-                        ),
-                        child: const Text(
-                          "Hoje",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                if (data != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2, bottom: 6),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.calendar_today,
-                            size: 14, color: Colors.white70),
-                        const SizedBox(width: 4),
-                        Text(
-                          "${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}",
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                if (exercicios.isNotEmpty)
-                  ...exercicios.take(3).map((ex) {
-                    if (ex is Map<String, dynamic>) {
-                      final nome = ex['nome'] ?? 'Exercício';
-                      final series = ex['series'] ?? '';
-                      final observacao = ex['observacao'] ?? '';
-                      final pausa = ex['pausa'] ?? '';
-                      final detalhes = [
-                        if (series.isNotEmpty) series,
-                        if (observacao.isNotEmpty) observacao,
-                        if (pausa.isNotEmpty) "Pausa: $pausa",
-                      ].join(' • ');
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 3),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text("• ",
-                                style: TextStyle(
-                                    color: Colors.amber, fontSize: 14)),
-                            Expanded(
-                              child: Text(
-                                "$nome${detalhes.isNotEmpty ? ' • $detalhes' : ''}",
-                                style: const TextStyle(
-                                    color: Colors.white70, fontSize: 13),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    } else if (ex is String) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 3),
-                        child: Text(
-                          "• $ex",
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 13),
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  }),
-              ],
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(top: 4, bottom: 8),
-            height: 1,
-            color: Colors.white12,
-          ),
-        ],
-      ),
-    );
-  }
-
-
-
-  Widget _itemDieta(Map<String, dynamic> dieta) {
-    final refeicao = dieta['refeicao'] ?? "Dieta";
-    final detalhes = dieta['detalhes'] ?? "Sem detalhes";
-    final data = dieta['criadoEm'] != null
+    final data = dieta['criadoEm'] is Timestamp
         ? (dieta['criadoEm'] as Timestamp).toDate()
         : null;
 
@@ -514,14 +326,21 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
         data.month == hoje.month &&
         data.day == hoje.day;
 
+    final nomes = {
+      "manha": "☀️ Manhã",
+      "almoco": "🍽 Almoço",
+      "lanche": "☕ Lanche",
+      "jantar": "🌙 Jantar",
+    };
+
     return AnimatedOpacity(
-      duration: const Duration(milliseconds: 400),
       opacity: 1,
+      duration: const Duration(milliseconds: 300),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.transparent, 
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -533,68 +352,103 @@ class _MenuAlunoTelaState extends State<MenuAlunoTela>
                     color: Colors.amber, size: 18),
                 const SizedBox(width: 6),
                 Text(
-                  refeicao,
+                  nomes[periodo] ?? "Refeição",
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
                 ),
                 if (ehHoje)
-                  Container(
-                    margin: const EdgeInsets.only(left: 8),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: Colors.white30),
-                    ),
-                    child: const Text(
-                      "Hoje",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.white38),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        "Hoje",
+                        style:
+                        TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ),
                   ),
               ],
             ),
+
             if (data != null)
               Padding(
-                padding: const EdgeInsets.only(top: 2, bottom: 6),
+                padding: const EdgeInsets.only(top: 4, bottom: 6),
                 child: Row(
                   children: [
                     const Icon(Icons.calendar_today,
                         size: 14, color: Colors.white70),
                     const SizedBox(width: 4),
                     Text(
-                      "${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}",
+                      "${data.day.toString().padLeft(2, '0')}/"
+                          "${data.month.toString().padLeft(2, '0')}/"
+                          "${data.year}",
                       style: const TextStyle(
                           color: Colors.white70, fontSize: 12),
                     ),
                   ],
                 ),
               ),
+
             Text(
-              "Detalhes: $detalhes",
-              style: const TextStyle(color: Colors.white70, fontSize: 13),
+              texto,
+              style:
+              const TextStyle(color: Colors.white70, fontSize: 14),
             ),
+
             Container(
               margin: const EdgeInsets.only(top: 8),
               height: 1,
               color: Colors.white12,
-            ),
+            )
           ],
         ),
       ),
     );
   }
 
+  // -------------------------------------------------------------
+  // ITEM DE TREINO (mantido)
+  // -------------------------------------------------------------
+  Widget _itemTreino(Map<String, dynamic> treino) {
+    final descricao = treino['descricao'] ?? "Treino";
+    final exercicios = (treino['exercicios'] as List?) ?? [];
+    final data = treino['dataCriacao'] != null
+        ? (treino['dataCriacao'] as Timestamp).toDate()
+        : null;
 
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(descricao,
+            style: const TextStyle(color: Colors.white, fontSize: 16)),
+        if (data != null)
+          Text(
+            "${data.day}/${data.month}/${data.year}",
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+        const SizedBox(height: 6),
+        ...exercicios.take(2).map((e) => Text("• ${e['nome']}",
+            style: const TextStyle(color: Colors.white70))),
+        Container(
+          margin: const EdgeInsets.only(top: 10),
+          height: 1,
+          color: Colors.white12,
+        ),
+      ],
+    );
+  }
 
-
+  // -------------------------------------------------------------
+  // CARD PADRÃO
+  // -------------------------------------------------------------
   Widget _cardSecao({required String titulo, required Widget child}) {
     return Container(
       width: double.infinity,

@@ -17,6 +17,12 @@ void main() {
         alunoId: 'aluno1',
         criadoEm: DateTime(2024, 1, 1),
         atualizadoEm: DateTime(2024, 1, 2),
+
+        // 🔥 novos obrigatórios
+        diaSemana: 'segunda',
+        concluido: false,
+        concluidoEm: null,
+        validadeSemana: DateTime(2024, 1, 1),
       );
 
       expect(treino.id, '123');
@@ -28,6 +34,8 @@ void main() {
       expect(treino.exercicios.length, 1);
       expect(treino.criadoEm, DateTime(2024, 1, 1));
       expect(treino.atualizadoEm, DateTime(2024, 1, 2));
+      expect(treino.diaSemana, 'segunda');
+      expect(treino.concluido, false);
     });
 
     test('Treino.novo deve criar objeto com id vazio e data atual', () {
@@ -37,6 +45,7 @@ void main() {
         frequencia: '2x',
         exercicios: [],
         personalId: 'p123',
+        diaSemana: 'quarta',
       );
 
       expect(treino.id, '');
@@ -47,6 +56,9 @@ void main() {
       expect(treino.alunoId, isNull);
       expect(treino.exercicios, isEmpty);
       expect(treino.atualizadoEm, isNull);
+      expect(treino.diaSemana, 'quarta');
+      expect(treino.concluido, false);
+      expect(treino.validadeSemana, isA<DateTime>());
     });
 
     test('toMap deve converter corretamente os dados', () {
@@ -61,6 +73,12 @@ void main() {
         personalId: 'p1',
         alunoId: 'a1',
         criadoEm: date,
+
+        // novos:
+        diaSemana: 'sexta',
+        concluido: false,
+        concluidoEm: null,
+        validadeSemana: date,
       );
 
       final map = treino.toMap();
@@ -71,6 +89,7 @@ void main() {
       expect(map['exercicios'][0]['nome'], 'Agachamento');
       expect(map['personalId'], 'p1');
       expect(map['alunoId'], 'a1');
+      expect(map['diaSemana'], 'sexta');
       expect(map['dataCriacao'], isA<Timestamp>());
       expect((map['dataCriacao'] as Timestamp).toDate(), date);
     });
@@ -87,6 +106,11 @@ void main() {
         'alunoId': 'a123',
         'dataCriacao': Timestamp.fromDate(DateTime(2023, 5, 1)),
         'atualizadoEm': Timestamp.fromDate(DateTime(2023, 5, 2)),
+
+        // novos campos
+        'diaSemana': 'sabado',
+        'concluido': false,
+        'validadeSemana': Timestamp.fromDate(DateTime(2023, 4, 30)),
       };
 
       final doc = _FakeDocumentSnapshot('abc', data);
@@ -100,9 +124,11 @@ void main() {
       expect(treino.alunoId, 'a123');
       expect(treino.criadoEm, DateTime(2023, 5, 1));
       expect(treino.atualizadoEm, DateTime(2023, 5, 2));
+      expect(treino.diaSemana, 'sabado');
+      expect(treino.concluido, false);
     });
 
-    test('copyWith deve criar nova instância alterando somente campos desejados', () {
+    test('copyWith deve manter dados antigos e modificar apenas o pedido', () {
       final original = Treino(
         id: '1',
         nome: 'Treino Original',
@@ -112,6 +138,11 @@ void main() {
         personalId: 'p1',
         alunoId: 'a1',
         criadoEm: DateTime(2024, 1, 1),
+
+        diaSemana: 'segunda',
+        concluido: false,
+        concluidoEm: null,
+        validadeSemana: DateTime(2024, 1, 1),
       );
 
       final novo = original.copyWith(nome: 'Treino Novo', frequencia: '2x');
@@ -120,6 +151,7 @@ void main() {
       expect(novo.frequencia, '2x');
       expect(novo.id, original.id);
       expect(novo.personalId, original.personalId);
+      expect(novo.diaSemana, original.diaSemana);
     });
 
     test('fromDoc deve funcionar com campos antigos (criadoEm)', () {
@@ -129,7 +161,13 @@ void main() {
         'frequencia': '1x',
         'exercicios': [],
         'personalId': 'p1',
+
         'criadoEm': Timestamp.fromDate(DateTime(2021, 1, 1)),
+
+        // campos novos opcionais
+        'diaSemana': 'segunda',
+        'concluido': false,
+        'validadeSemana': Timestamp.fromDate(DateTime(2021, 1, 1)),
       };
 
       final doc = _FakeDocumentSnapshot('xyz', data);
@@ -154,6 +192,6 @@ class _FakeDocumentSnapshot implements DocumentSnapshot {
   @override
   Map<String, dynamic>? data() => dataMap;
 
-  // A partir daqui: membros que não usamos, mas são obrigatórios
-  @override noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

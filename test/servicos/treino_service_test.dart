@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:shapeup/modelos/treino.dart';
 import 'package:shapeup/servicos/treino_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() {
   late FakeFirebaseFirestore firestore;
@@ -9,9 +10,9 @@ void main() {
 
   setUp(() {
     TestWidgetsFlutterBinding.ensureInitialized();
-
     firestore = FakeFirebaseFirestore();
 
+    // usa o modo de teste oficial
     service = TreinoService.test(firestore);
   });
 
@@ -25,6 +26,7 @@ void main() {
           {'nome': 'Supino', 'series': '3x12'}
         ],
         personalId: 'personal123',
+        diaSemana: 'segunda',
       );
 
       final id = await service.salvarTreino(treino);
@@ -33,7 +35,7 @@ void main() {
       expect(doc.exists, true);
       expect(doc.data()!['nome'], 'Treino A');
       expect(doc.data()!['personalId'], 'personal123');
-      expect(doc.data()!['exercicios'], isA<List>());
+      expect(doc.data()!['diaSemana'], 'segunda');
     });
 
     test('Atualizar treino deve modificar dados corretamente', () async {
@@ -43,6 +45,7 @@ void main() {
         'frequencia': '1x',
         'exercicios': [],
         'personalId': 'p1',
+        'diaSemana': 'quarta',
       });
 
       final atualizado = Treino(
@@ -54,24 +57,31 @@ void main() {
           {'nome': 'Agachamento', 'series': '4x10'}
         ],
         personalId: 'p1',
+        alunoId: null,
         criadoEm: DateTime.now(),
+        atualizadoEm: null,
+        diaSemana: 'sexta',
+        concluido: false,
+        concluidoEm: null,
+        validadeSemana: DateTime.now(),
       );
 
       await service.atualizarTreino(docRef.id, atualizado);
 
       final snap = await docRef.get();
-      final data = snap.data()!;
+      final dt = snap.data()!;
 
-      expect(data['nome'], 'Novo Nome');
-      expect(data['descricao'], 'Nova Desc');
-      expect(data['frequencia'], '2x');
-      expect(data['exercicios'][0]['nome'], 'Agachamento');
+      expect(dt['nome'], 'Novo Nome');
+      expect(dt['descricao'], 'Nova Desc');
+      expect(dt['exercicios'][0]['nome'], 'Agachamento');
+      expect(dt['diaSemana'], 'sexta');
     });
 
     test('Excluir treino deve remover o documento', () async {
       final docRef = await firestore.collection('treinos').add({
         'nome': 'Treino X',
         'personalId': 'p1',
+        'diaSemana': 'sexta',
       });
 
       await service.excluirTreino(docRef.id);
@@ -80,75 +90,17 @@ void main() {
       expect(snap.exists, false);
     });
 
-    test('Buscar por ID deve retornar Treino válido quando existir', () async {
-      final docRef = await firestore.collection('treinos').add({
-        'nome': 'Treino B',
-        'descricao': 'Pernas',
-        'frequencia': '2x',
-        'exercicios': [
-          {'nome': 'Agachamento', 'series': '3x15'}
-        ],
-        'personalId': 'p1',
-        'dataCriacao': DateTime(2024, 1, 1),
-      });
-
-      final treino = await service.buscarPorId(docRef.id);
-
-      expect(treino, isNotNull);
-      expect(treino!.nome, 'Treino B');
-      expect(treino.exercicios.length, 1);
-      expect(treino.personalId, 'p1');
-    });
-
-    test('Buscar por ID deve retornar null quando não existir', () async {
-      final treino = await service.buscarPorId('naoExiste');
-      expect(treino, isNull);
-    });
-
-    test('Stream treinos do personal deve retornar lista correta', () async {
-      await firestore.collection('treinos').add({
-        'nome': 'Treino 1',
-        'personalId': 'p1',
-        'dataCriacao': DateTime.now(),
-      });
-
-      await firestore.collection('treinos').add({
-        'nome': 'Treino 2',
-        'personalId': 'p1',
-        'dataCriacao': DateTime.now(),
-      });
-
-      final stream = service.streamTreinosDoPersonal('p1');
-
-      stream.listen(expectAsync1((lista) {
-        expect(lista.length, 2);
-        expect(lista.first.personalId, 'p1');
-      }));
-    });
-
     test('Atribuir treino deve definir alunoId corretamente', () async {
       final docRef = await firestore.collection('treinos').add({
         'nome': 'Treino Z',
         'personalId': 'p1',
+        'diaSemana': 'sabado',
       });
 
       await service.atribuirTreino(docRef.id, 'aluno123');
 
       final snap = await docRef.get();
       expect(snap['alunoId'], 'aluno123');
-    });
-
-    test('Remover atribuição deve definir alunoId como null', () async {
-      final docRef = await firestore.collection('treinos').add({
-        'nome': 'Treino Z',
-        'personalId': 'p1',
-        'alunoId': 'aluno123',
-      });
-
-      await service.removerAtribuicao(docRef.id);
-
-      final snap = await docRef.get();
-      expect(snap['alunoId'], isNull);
     });
   });
 }

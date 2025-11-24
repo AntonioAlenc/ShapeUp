@@ -11,6 +11,13 @@ class Dieta {
   final DateTime? criadoEm;
   final DateTime? atualizadoEm;
 
+  // 🔥 CAMPOS NOVOS PARA O MODELO B
+  final String? periodo;
+  final String? texto;
+
+  final bool concluida;
+  final DateTime? concluidaEm;
+
   Dieta({
     required this.id,
     required this.nome,
@@ -21,10 +28,15 @@ class Dieta {
     required this.alunoId,
     this.criadoEm,
     this.atualizadoEm,
+    this.periodo,
+    this.texto,
+    this.concluida = false,
+    this.concluidaEm,
   });
 
   factory Dieta.fromMap(Map<String, dynamic> map, String id) {
-    final criadoEm = (map['criadoEm'] ?? map['createdAt']) as Timestamp?;
+    final criado = (map['criadoEm'] ?? map['createdAt']) as Timestamp?;
+
     return Dieta(
       id: id,
       nome: map['nome'] ?? '',
@@ -33,8 +45,15 @@ class Dieta {
       restricoes: map['restricoes'] ?? '',
       personalId: map['personalId'] ?? '',
       alunoId: map['alunoId'] ?? '',
-      criadoEm: criadoEm?.toDate(),
+      criadoEm: criado?.toDate(),
       atualizadoEm: (map['atualizadoEm'] as Timestamp?)?.toDate(),
+
+      // 🔥 adicionados para modelo B
+      periodo: map['periodo'],
+      texto: map['texto'],
+
+      concluida: map['concluida'] ?? false,
+      concluidaEm: (map['concluidaEm'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -46,8 +65,19 @@ class Dieta {
       'restricoes': restricoes,
       'personalId': personalId,
       'alunoId': alunoId,
-      'criadoEm': criadoEm != null ? Timestamp.fromDate(criadoEm!) : FieldValue.serverTimestamp(),
-      'atualizadoEm': atualizadoEm != null ? Timestamp.fromDate(atualizadoEm!) : null,
+      'criadoEm': criadoEm != null
+          ? Timestamp.fromDate(criadoEm!)
+          : FieldValue.serverTimestamp(),
+      'atualizadoEm':
+      atualizadoEm != null ? Timestamp.fromDate(atualizadoEm!) : null,
+
+      // 🔥 modelo B
+      'periodo': periodo,
+      'texto': texto,
+
+      'concluida': concluida,
+      'concluidaEm':
+      concluidaEm != null ? Timestamp.fromDate(concluidaEm!) : null,
     };
   }
 }

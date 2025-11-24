@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class TreinosPersonalAlunoTela extends StatefulWidget {
   final String nomeAluno;
-  final String alunoId; 
+  final String alunoId;
 
   const TreinosPersonalAlunoTela({
     super.key,
@@ -13,11 +13,40 @@ class TreinosPersonalAlunoTela extends StatefulWidget {
   });
 
   @override
-  State<TreinosPersonalAlunoTela> createState() => _TreinosPersonalAlunoTelaState();
+  State<TreinosPersonalAlunoTela> createState() =>
+      _TreinosPersonalAlunoTelaState();
 }
 
-class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
-  void _cadastrarTreino() {
+class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  final dias = const [
+    "segunda",
+    "terca",
+    "quarta",
+    "quinta",
+    "sexta",
+    "sabado",
+    "domingo",
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: dias.length, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  // ---------------------------------------------------------
+  // 🔥 Criar treino
+  // ---------------------------------------------------------
+  void _cadastrarTreino(String diaSemana) {
     final nomeController = TextEditingController();
     final descController = TextEditingController();
     List<Map<String, TextEditingController>> exercicios = [];
@@ -25,12 +54,14 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
     showDialog(
       context: context,
       builder: (_) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
+        builder: (context, setStateSB) => AlertDialog(
           backgroundColor: Colors.grey[800],
-          title: const Text("Novo Treino", style: TextStyle(color: Colors.white)),
+          title: Text(
+            "Novo Treino (${diaSemana.toUpperCase()})",
+            style: const TextStyle(color: Colors.white),
+          ),
           content: SingleChildScrollView(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nomeController,
@@ -50,7 +81,7 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
                 TextField(
                   controller: descController,
                   style: const TextStyle(color: Colors.white),
-                  maxLines: null,
+                  maxLines: 3,
                   decoration: const InputDecoration(
                     labelText: "Descrição",
                     labelStyle: TextStyle(color: Colors.white70),
@@ -62,13 +93,19 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                const Text("Exercícios", style: TextStyle(color: Colors.amber)),
+                const SizedBox(height: 16),
+                const Text(
+                  "Exercícios",
+                  style: TextStyle(color: Colors.amber, fontSize: 16),
+                ),
                 const SizedBox(height: 8),
+
+                // Lista de exercícios
                 Column(
                   children: exercicios.asMap().entries.map((entry) {
                     final i = entry.key;
                     final ex = entry.value;
+
                     return Card(
                       color: Colors.grey[700],
                       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -103,23 +140,25 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon:
+                                const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () {
-                                  setState(() {
+                                  setStateSB(() {
                                     exercicios.removeAt(i);
                                   });
                                 },
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ),
                     );
                   }).toList(),
                 ),
+
                 OutlinedButton.icon(
                   onPressed: () {
-                    setState(() {
+                    setStateSB(() {
                       exercicios.add({
                         "nome": TextEditingController(),
                         "series": TextEditingController(),
@@ -128,7 +167,8 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
                     });
                   },
                   icon: const Icon(Icons.add, color: Colors.amber),
-                  label: const Text("Adicionar exercício", style: TextStyle(color: Colors.amber)),
+                  label: const Text("Adicionar exercício",
+                      style: TextStyle(color: Colors.amber)),
                 ),
               ],
             ),
@@ -140,147 +180,48 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
             ),
             ElevatedButton(
               onPressed: () async {
+                if (nomeController.text.trim().isEmpty) return;
+
+                final uid = FirebaseAuth.instance.currentUser!.uid;
+
                 final listaEx = exercicios.map((ex) {
                   return {
                     "nome": ex["nome"]!.text.trim(),
                     "series": ex["series"]!.text.trim(),
                     "observacao": ex["obs"]!.text.trim(),
                   };
-                }).where((ex) => ex["nome"]!.isNotEmpty).toList();
+                }).where((e) => e["nome"]!.isNotEmpty).toList();
 
-                if (nomeController.text.trim().isEmpty) return;
-
-                final uid = FirebaseAuth.instance.currentUser!.uid;
-                final treinosRef = FirebaseFirestore.instance.collection('treinos');
-
-                await treinosRef.add({
+                await FirebaseFirestore.instance.collection('treinos').add({
                   'nome': nomeController.text.trim(),
                   'descricao': descController.text.trim(),
                   'exercicios': listaEx,
                   'alunoId': widget.alunoId,
-                  'personalId': uid, 
+                  'personalId': uid,
+                  'diaSemana': diaSemana,
+                  'concluido': false,
+                  'concluidoEm': null,
+                  'validadeSemana': Timestamp.now(),
                   'dataCriacao': Timestamp.now(),
                 });
 
-                nomeController.dispose();
-                descController.dispose();
-                for (var ex in exercicios) {
-                  ex.values.forEach((c) => c.dispose());
-                }
-
-                if (mounted) Navigator.pop(context);
+                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.amber,
                 foregroundColor: Colors.black,
               ),
               child: const Text("Salvar"),
-            ),
+            )
           ],
         ),
       ),
     );
   }
 
-  Future<void> _editarTreino(String treinoId, String nomeAtual, String descricaoAtual, List<Map<String, dynamic>> exerciciosAtuais) async {
-    final nomeController = TextEditingController(text: nomeAtual);
-    final descController = TextEditingController(text: descricaoAtual);
-
-    showDialog(
-      context: context,
-      builder: (_) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[800],
-          title: const Text("Editar Treino", style: TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nomeController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: "Nome do treino",
-                  labelStyle: TextStyle(color: Colors.white70),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: descController,
-                style: const TextStyle(color: Colors.white),
-                maxLines: null,
-                decoration: const InputDecoration(
-                  labelText: "Descrição",
-                  labelStyle: TextStyle(color: Colors.white70),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancelar", style: TextStyle(color: Colors.amber)),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (nomeController.text.trim().isEmpty) return;
-
-                final uid = FirebaseAuth.instance.currentUser!.uid; 
-
-                await FirebaseFirestore.instance.collection('treinos').doc(treinoId).update({
-                  'nome': nomeController.text.trim(),
-                  'descricao': descController.text.trim(),
-                  'exercicios': exerciciosAtuais,
-                  'personalId': uid, 
-                });
-
-                nomeController.dispose();
-                descController.dispose();
-
-                if (mounted) Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
-                foregroundColor: Colors.black,
-              ),
-              child: const Text("Salvar"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _confirmarExclusaoTreino(String treinoId) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text("Excluir treino?", style: TextStyle(color: Colors.amber)),
-        content: const Text("Esta ação não pode ser desfeita.", style: TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancelar", style: TextStyle(color: Colors.amber))),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            child: const Text("Excluir"),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
-
-    try {
-      await FirebaseFirestore.instance.collection('treinos').doc(treinoId).delete();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Treino excluído")));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Falha ao excluir: $e")));
-      }
-    }
-  }
-
+  // ---------------------------------------------------------
+  // 🔥 Interface principal com abas
+  // ---------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser!.uid;
@@ -288,105 +229,152 @@ class _TreinosPersonalAlunoTelaState extends State<TreinosPersonalAlunoTela> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text("Treinos de ${widget.nomeAluno}"),
+        title: Text("Treinos de ${widget.nomeAluno}",
+            style: const TextStyle(color: Colors.amber)),
         backgroundColor: Colors.black,
-        foregroundColor: Colors.amber,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.amber),
-            onPressed: () => setState(() {}),
-          ),
-        ],
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('treinos')
-            .where('alunoId', isEqualTo: widget.alunoId)
-            .where('personalId', isEqualTo: uid) 
-            .snapshots(includeMetadataChanges: true),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                "Erro: ${snapshot.error}",
-                style: const TextStyle(color: Colors.white),
-                textAlign: TextAlign.center,
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          indicatorColor: Colors.amber,
+          tabs: dias
+              .map((d) => Tab(
+            child: Text(
+              d.toUpperCase(),
+              style: const TextStyle(
+                color: Colors.amber,
+                fontWeight: FontWeight.bold,
               ),
-            );
-          }
+            ),
+          ))
+              .toList(),
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: dias.map((dia) {
+          return StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('treinos')
+                .where('alunoId', isEqualTo: widget.alunoId)
+                .where('personalId', isEqualTo: uid)
+                .where('diaSemana', isEqualTo: dia)
+                .orderBy('dataCriacao', descending: true)
+                .snapshots(includeMetadataChanges: true),
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          final docs = (snapshot.data?.docs ?? []).toList();
-          docs.sort((a, b) {
-            final da = (a.data() as Map<String, dynamic>)['dataCriacao'];
-            final db = (b.data() as Map<String, dynamic>)['dataCriacao'];
-            final ta = da is Timestamp ? da.toDate() : DateTime.fromMillisecondsSinceEpoch(0);
-            final tb = db is Timestamp ? db.toDate() : DateTime.fromMillisecondsSinceEpoch(0);
-            return tb.compareTo(ta);
-          });
+              final docs = snap.data?.docs ?? [];
 
-          if (docs.isEmpty) {
-            return const Center(
-              child: Text("Nenhum treino cadastrado para este aluno", style: TextStyle(color: Colors.white)),
-            );
-          }
+              if (docs.isEmpty) {
+                return Center(
+                  child: Text(
+                    "Nenhum treino para ${dia.toUpperCase()}",
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                );
+              }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: docs.length,
-            itemBuilder: (context, index) {
-              final treino = docs[index];
-              final data = treino.data() as Map<String, dynamic>;
-              final exercicios = List<Map<String, dynamic>>.from(data['exercicios'] ?? []);
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: docs.length,
+                itemBuilder: (context, index) {
+                  final doc = docs[index];
+                  final data = doc.data() as Map<String, dynamic>;
+                  final exercicios =
+                  List<Map<String, dynamic>>.from(data['exercicios'] ?? []);
 
-              return Card(
-                color: Colors.grey[900],
-                margin: const EdgeInsets.only(bottom: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: ExpansionTile(
-                  title: Text((data['nome'] ?? "-").toString(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  subtitle: Text((data['descricao'] ?? "-").toString(), style: const TextStyle(color: Colors.white70)),
-                  children: [
-                    ...exercicios.map((ex) => ListTile(
-                      title: Text((ex['nome'] ?? '-').toString(), style: const TextStyle(color: Colors.amber)),
-                      subtitle: Text("Séries: ${ex['series'] ?? '-'}\nObs: ${ex['observacao'] ?? '-'}", style: const TextStyle(color: Colors.white70)),
-                    )),
-                    const Divider(color: Colors.white12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                  return Card(
+                    color: Colors.grey[900],
+                    margin: const EdgeInsets.only(bottom: 16),
+                    shape:
+                    RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: ExpansionTile(
+                      title: Text(
+                        (data['nome'] ?? "-").toString(),
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        (data['descricao'] ?? "-").toString(),
+                        style: const TextStyle(color: Colors.white70),
+                      ),
                       children: [
-                        IconButton(
-                          tooltip: "Editar treino",
-                          icon: const Icon(Icons.edit, color: Colors.amber),
-                          onPressed: () => _editarTreino(
-                            treino.id,
-                            (data['nome'] ?? "").toString(),
-                            (data['descricao'] ?? "").toString(),
-                            exercicios,
+                        ...exercicios.map((ex) => ListTile(
+                          title: Text(
+                            (ex['nome'] ?? "-").toString(),
+                            style: const TextStyle(color: Colors.amber),
                           ),
-                        ),
-                        IconButton(
-                          tooltip: "Excluir treino",
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _confirmarExclusaoTreino(treino.id),
-                        ),
+                          subtitle: Text(
+                            "Séries: ${ex['series'] ?? '-'}\nObs: ${ex['observacao'] ?? '-'}",
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                        )),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () =>
+                                  _confirmarExclusaoTreino(doc.id),
+                            ),
+                          ],
+                        )
                       ],
                     ),
-                  ],
-                ),
+                  );
+                },
               );
             },
           );
-        },
+        }).toList(),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _cadastrarTreino,
         backgroundColor: Colors.amber,
         child: const Icon(Icons.add, color: Colors.black),
+        onPressed: () {
+          final dia = dias[_tabController.index];
+          _cadastrarTreino(dia);
+        },
       ),
     );
+  }
+
+  // ---------------------------------------------------------
+  // 🔥 Confirmação de exclusão
+  // ---------------------------------------------------------
+  Future<void> _confirmarExclusaoTreino(String id) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text("Excluir treino?",
+            style: TextStyle(color: Colors.amber)),
+        content: const Text("Esta ação não pode ser desfeita.",
+            style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child:
+            const Text("Cancelar", style: TextStyle(color: Colors.amber)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style:
+            ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text("Excluir"),
+          ),
+        ],
+      ),
+    );
+
+    if (ok == true) {
+      await FirebaseFirestore.instance.collection('treinos').doc(id).delete();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Treino excluído")));
+      }
+    }
   }
 }

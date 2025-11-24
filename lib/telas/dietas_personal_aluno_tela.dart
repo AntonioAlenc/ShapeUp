@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class DietasPersonalAlunoTela extends StatefulWidget {
   final String nomeAluno;
-  final String alunoId; 
+  final String alunoId;
 
   const DietasPersonalAlunoTela({
     super.key,
@@ -13,183 +13,153 @@ class DietasPersonalAlunoTela extends StatefulWidget {
   });
 
   @override
-  State<DietasPersonalAlunoTela> createState() => _DietasPersonalAlunoTelaState();
+  State<DietasPersonalAlunoTela> createState() =>
+      _DietasPersonalAlunoTelaState();
 }
 
-class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
-  final CollectionReference dietasRef =
-  FirebaseFirestore.instance.collection('dietas');
+class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela>
+    with SingleTickerProviderStateMixin {
+  late TabController tabController;
 
-  void _cadastrarDieta() {
-    final refeicaoController = TextEditingController();
-    final detalhesController = TextEditingController();
+  final List<String> periodos = [
+    "manha",
+    "almoco",
+    "lanche",
+    "jantar",
+  ];
+
+  final List<String> periodosLabel = [
+    "☀️ Manhã",
+    "🍽 Almoço",
+    "☕ Lanche",
+    "🌙 Jantar",
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    tabController = TabController(length: 4, vsync: this);
+  }
+
+  void _cadastrarRefeicao(String periodo) {
+    final textoController = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[800],
-          title: const Text("Nova Dieta", style: TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: refeicaoController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: "Refeição",
-                  labelStyle: TextStyle(color: Colors.white70),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.amber),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white70),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: detalhesController,
-                style: const TextStyle(color: Colors.white),
-                maxLines: null,
-                decoration: const InputDecoration(
-                  labelText: "Detalhes",
-                  labelStyle: TextStyle(color: Colors.white70),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.amber),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white70),
-                  ),
-                ),
-              ),
-            ],
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Text(
+          "Adicionar em ${periodo.toUpperCase()}",
+          style: const TextStyle(color: Colors.amber),
+        ),
+        content: TextField(
+          controller: textoController,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            labelText: "Descrição da refeição",
+            labelStyle: TextStyle(color: Colors.white70),
+            enabledBorder:
+            OutlineInputBorder(borderSide: BorderSide(color: Colors.white54)),
+            focusedBorder:
+            OutlineInputBorder(borderSide: BorderSide(color: Colors.amber)),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancelar", style: TextStyle(color: Colors.amber)),
+          maxLines: null,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child:
+            const Text("Cancelar", style: TextStyle(color: Colors.amber)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.black,
             ),
-            ElevatedButton(
-              onPressed: () async {
-                if (refeicaoController.text.trim().isEmpty) return;
+            onPressed: () async {
+              if (textoController.text.trim().isEmpty) return;
 
-                final uid = FirebaseAuth.instance.currentUser!.uid; 
+              final uid = FirebaseAuth.instance.currentUser!.uid;
 
-                
-                final novaDieta = await dietasRef.add({
-                  'alunoId': widget.alunoId,
-                  'personalId': uid,
-                  'refeicao': refeicaoController.text.trim(),
-                  'detalhes': detalhesController.text.trim(),
-                  'criadoEm': FieldValue.serverTimestamp(), 
-                });
+              await FirebaseFirestore.instance.collection("dietas").add({
+                "alunoId": widget.alunoId,
+                "personalId": uid,
+                "periodo": periodo,
+                "texto": textoController.text.trim(),
+                "criadoEm": FieldValue.serverTimestamp(),
+              });
 
-                
-                await FirebaseFirestore.instance
-                    .collection('dietas')
-                    .doc(novaDieta.id)
-                    .update({
-                  'alunoId': widget.alunoId,
-                });
-
-                if (mounted) Navigator.pop(context);
-
-                
-                refeicaoController.dispose();
-                detalhesController.dispose();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
-                foregroundColor: Colors.black,
-              ),
-              child: const Text("Salvar"),
-            ),
-          ],
-        );
-      },
+              Navigator.pop(context);
+            },
+            child: const Text("Salvar"),
+          ),
+        ],
+      ),
     );
   }
 
-  void _editarDieta(
-      String dietaId, String refeicaoAtual, String detalhesAtuais) {
-    final refeicaoController = TextEditingController(text: refeicaoAtual);
-    final detalhesController = TextEditingController(text: detalhesAtuais);
+  void _editarRefeicao(String dietaId, String textoAtual) {
+    final textoController = TextEditingController(text: textoAtual);
 
     showDialog(
       context: context,
-      builder: (_) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[800],
-          title:
-          const Text("Editar Dieta", style: TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: refeicaoController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: "Refeição",
-                  labelStyle: TextStyle(color: Colors.white70),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: detalhesController,
-                style: const TextStyle(color: Colors.white),
-                maxLines: null,
-                decoration: const InputDecoration(
-                  labelText: "Detalhes",
-                  labelStyle: TextStyle(color: Colors.white70),
-                ),
-              ),
-            ],
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text("Editar Refeição",
+            style: TextStyle(color: Colors.amber)),
+        content: TextField(
+          controller: textoController,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            labelText: "Descrição",
+            labelStyle: TextStyle(color: Colors.white70),
+            enabledBorder:
+            OutlineInputBorder(borderSide: BorderSide(color: Colors.white54)),
+            focusedBorder:
+            OutlineInputBorder(borderSide: BorderSide(color: Colors.amber)),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child:
-              const Text("Cancelar", style: TextStyle(color: Colors.amber)),
+          maxLines: null,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child:
+            const Text("Cancelar", style: TextStyle(color: Colors.amber)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await FirebaseFirestore.instance
+                  .collection('dietas')
+                  .doc(dietaId)
+                  .update({
+                "texto": textoController.text.trim(),
+                "atualizadoEm": FieldValue.serverTimestamp(),
+              });
+
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.black,
             ),
-            ElevatedButton(
-              onPressed: () async {
-                if (refeicaoController.text.trim().isEmpty) return;
-
-                final uid = FirebaseAuth.instance.currentUser!.uid;
-
-                await dietasRef.doc(dietaId).update({
-                  'refeicao': refeicaoController.text.trim(),
-                  'detalhes': detalhesController.text.trim(),
-                  'personalId': uid,
-                });
-
-                if (mounted) Navigator.pop(context);
-
-                refeicaoController.dispose();
-                detalhesController.dispose();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
-                foregroundColor: Colors.black,
-              ),
-              child: const Text("Salvar"),
-            ),
-          ],
-        );
-      },
+            child: const Text("Salvar"),
+          ),
+        ],
+      ),
     );
   }
 
-  Future<void> _confirmarExclusaoDieta(String dietaId) async {
-    final ok = await showDialog<bool>(
+  void _excluirRefeicao(String dietaId) async {
+    final confirmar = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: Colors.grey[900],
         title:
-        const Text("Excluir dieta?", style: TextStyle(color: Colors.amber)),
-        content: const Text("Esta ação não pode ser desfeita.",
-            style: TextStyle(color: Colors.white70)),
+        const Text("Excluir?", style: TextStyle(color: Colors.amber)),
+        content: const Text(
+          "Isso não pode ser desfeito.",
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -204,19 +174,9 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
         ],
       ),
     );
-    if (ok != true) return;
 
-    try {
-      await dietasRef.doc(dietaId).delete();
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text("Dieta excluída")));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Falha ao excluir: $e")));
-      }
+    if (confirmar == true) {
+      await FirebaseFirestore.instance.collection("dietas").doc(dietaId).delete();
     }
   }
 
@@ -227,95 +187,101 @@ class _DietasPersonalAlunoTelaState extends State<DietasPersonalAlunoTela> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text("Dietas de ${widget.nomeAluno}"),
+        title: Text("Dietas — ${widget.nomeAluno}"),
         backgroundColor: Colors.black,
         foregroundColor: Colors.amber,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.amber),
-            onPressed: () => setState(() {}),
-          ),
-        ],
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: dietasRef
-            .where('alunoId', isEqualTo: widget.alunoId)
-            .where('personalId', isEqualTo: uid)
-            .orderBy('criadoEm', descending: true) 
-            .snapshots(includeMetadataChanges: true),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                "Erro: ${snapshot.error}",
-                style: const TextStyle(color: Colors.white),
-                textAlign: TextAlign.center,
-              ),
-            );
-          }
-
-          final docs = (snapshot.data?.docs ?? []).toList();
-
-          if (docs.isEmpty) {
-            return const Center(
-              child: Text("Nenhuma dieta cadastrada para este aluno",
-                  style: TextStyle(color: Colors.white)),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: docs.length,
-            itemBuilder: (context, index) {
-              final dietaDoc = docs[index];
-              final data = dietaDoc.data() as Map<String, dynamic>;
-
-              return Card(
-                color: Colors.grey[900],
-                margin: const EdgeInsets.only(bottom: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                child: ListTile(
-                  title: Text((data['refeicao'] ?? "-").toString(),
-                      style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold)),
-                  subtitle: Text((data['detalhes'] ?? "-").toString(),
-                      style: const TextStyle(color: Colors.white70)),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        tooltip: "Editar",
-                        icon: const Icon(Icons.edit, color: Colors.amber),
-                        onPressed: () => _editarDieta(
-                          dietaDoc.id,
-                          (data['refeicao'] ?? "").toString(),
-                          (data['detalhes'] ?? "").toString(),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: "Excluir",
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () =>
-                            _confirmarExclusaoDieta(dietaDoc.id),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
+        bottom: TabBar(
+          controller: tabController,
+          indicatorColor: Colors.amber,
+          labelColor: Colors.amber,
+          unselectedLabelColor: Colors.white70,
+          tabs: [
+            for (final label in periodosLabel) Tab(text: label),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _cadastrarDieta,
         backgroundColor: Colors.amber,
         child: const Icon(Icons.add, color: Colors.black),
+        onPressed: () {
+          final periodo = periodos[tabController.index];
+          _cadastrarRefeicao(periodo);
+        },
       ),
+      body: TabBarView(
+        controller: tabController,
+        children: [
+          for (int i = 0; i < periodos.length; i++)
+            _telaPeriodo(periodos[i], uid),
+        ],
+      ),
+    );
+  }
+
+  Widget _telaPeriodo(String periodo, String uid) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('dietas')
+          .where('alunoId', isEqualTo: widget.alunoId)
+          .where('personalId', isEqualTo: uid)
+          .where('periodo', isEqualTo: periodo)
+          .orderBy('criadoEm', descending: true)
+          .snapshots(),
+      builder: (context, snap) {
+        if (!snap.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final docs = snap.data!.docs;
+
+        if (docs.isEmpty) {
+          return const Center(
+            child: Text(
+              "Nenhuma refeição cadastrada",
+              style: TextStyle(color: Colors.white70),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: docs.length,
+          itemBuilder: (_, i) {
+            final d = docs[i];
+            final data = d.data() as Map<String, dynamic>;
+
+            return Card(
+              color: Colors.grey[900],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.only(bottom: 16),
+              child: ListTile(
+                title: Text(
+                  data["texto"] ?? "",
+                  style:
+                  const TextStyle(color: Colors.white, fontSize: 16),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon:
+                      const Icon(Icons.edit, color: Colors.amber),
+                      onPressed: () =>
+                          _editarRefeicao(d.id, data["texto"] ?? ""),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _excluirRefeicao(d.id),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -8,66 +8,74 @@ class DietaAlunoTela extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      return const Center(
-        child: Text(
-          'Não autenticado',
-          style: TextStyle(color: Colors.white),
-        ),
-      );
-    }
 
-    return Container(
-      color: Colors.black,
-      child: StreamBuilder<QuerySnapshot>(
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.amber,
+        title: const Text(""),
+      ),
+      body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('dietas')
             .where('alunoId', isEqualTo: uid)
-            .orderBy('criadoEm', descending: true)
+            .orderBy(FieldPath.documentId, descending: false)   // 🔥 FIX IMPORTANTE
             .snapshots(),
         builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
+          if (!snap.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (!snap.hasData || snap.data!.docs.isEmpty) {
+          final docs = snap.data!.docs;
+
+          if (docs.isEmpty) {
             return const Center(
               child: Text(
-                'Nenhuma dieta atribuída',
+                "Nenhuma dieta atribuída",
                 style: TextStyle(color: Colors.white),
               ),
             );
           }
 
-          final docs = snap.data!.docs;
+          // ---- AGRUPAR POR PERÍODO ----
+          final grupos = {
+            'manha': <String>[],
+            'almoco': <String>[],
+            'lanche': <String>[],
+            'jantar': <String>[],
+          };
 
-          return ListView.builder(
+          for (var doc in docs) {
+            final data = doc.data() as Map<String, dynamic>;
+
+            final periodo = (data['periodo'] ?? '').toString().toLowerCase();
+            final texto = (data['texto'] ?? '').toString();
+
+            if (grupos.containsKey(periodo)) {
+              grupos[periodo]!.add(texto);
+            }
+          }
+
+          return ListView(
             padding: const EdgeInsets.all(16),
-            itemCount: docs.length,
-            itemBuilder: (context, index) {
-              final data = docs[index].data() as Map<String, dynamic>;
-              final titulo = data['refeicao'] ?? 'Dieta';
-              final detalhes = data['detalhes'] ?? '';
-
-              return _blocoRefeicao(
-                context,
-                titulo: titulo,
-                alimentos: [detalhes],
-              );
-            },
+            children: [
+              _blocoPeriodo("☀️ Manhã", grupos['manha']!),
+              _blocoPeriodo("🍽 Almoço", grupos['almoco']!),
+              _blocoPeriodo("☕ Lanche", grupos['lanche']!),
+              _blocoPeriodo("🌙 Jantar", grupos['jantar']!),
+            ],
           );
         },
       ),
     );
   }
 
-  Widget _blocoRefeicao(
-      BuildContext context, {
-        required String titulo,
-        required List<String> alimentos,
-      }) {
+  Widget _blocoPeriodo(String titulo, List<String> itens) {
+    if (itens.isEmpty) return const SizedBox.shrink();
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[900],
@@ -80,37 +88,19 @@ class DietaAlunoTela extends StatelessWidget {
             titulo,
             style: const TextStyle(
               color: Colors.amber,
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 12),
-          ...alimentos.map(
-                (alimento) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
+
+          ...itens.map(
+                (e) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
               child: Text(
-                alimento,
+                "• $e",
                 style: const TextStyle(color: Colors.white),
               ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('$titulo marcado como feito!')),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: const Text("Feito"),
             ),
           ),
         ],

@@ -2,11 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'treinos_personal_aluno_tela.dart';
 import 'dietas_personal_aluno_tela.dart';
-import 'progresso_personal_aluno_tela.dart'; 
+import 'progresso_personal_aluno_tela.dart'; // 🔹 novo import
 
 class AlunoDetalhesTela extends StatelessWidget {
   final String nomeAluno;
-  final String alunoId; 
+  final String alunoId;
 
   const AlunoDetalhesTela({
     super.key,
@@ -25,7 +25,7 @@ class AlunoDetalhesTela extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Aluno desvinculado com sucesso")),
         );
-        Navigator.pop(context); 
+        Navigator.pop(context); // volta para lista de alunos
       }
     } catch (e) {
       if (context.mounted) {
@@ -56,7 +56,7 @@ class AlunoDetalhesTela extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context); 
+              Navigator.pop(context); // fecha o dialog
               _desvincularAluno(context);
             },
             style: ElevatedButton.styleFrom(
@@ -82,7 +82,7 @@ class AlunoDetalhesTela extends StatelessWidget {
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
-            .doc(alunoId) 
+            .doc(alunoId)
             .snapshots(),
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
@@ -106,6 +106,7 @@ class AlunoDetalhesTela extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // 🔹 Exibir informações básicas do aluno
                 Card(
                   color: Colors.grey[900],
                   margin: const EdgeInsets.only(bottom: 20),
@@ -122,13 +123,39 @@ class AlunoDetalhesTela extends StatelessWidget {
                         fontSize: 18,
                       ),
                     ),
-                    subtitle: Text(
-                      "ID: $alunoIdCurto...\nIdade: ${aluno["idade"] ?? "-"}\nObjetivo: ${aluno["objetivo"] ?? "-"}",
-                      style: const TextStyle(color: Colors.white70),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "ID: $alunoIdCurto...",
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        Text(
+                          "Idade: ${aluno["idade"] ?? "-"}",
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        const SizedBox(height: 4),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "Objetivo: ${aluno["objetivo"] ?? "-"}",
+                                style: const TextStyle(color: Colors.white70),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => _editarObjetivo(context, alunoId),
+                              child: const Icon(Icons.edit, color: Colors.amber, size: 20),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
 
+                //Botões de navegação
                 _botaoMenu(
                   context,
                   titulo: "Treinos",
@@ -139,7 +166,7 @@ class AlunoDetalhesTela extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (_) => TreinosPersonalAlunoTela(
                           nomeAluno: nomeAluno,
-                          alunoId: alunoId, 
+                          alunoId: alunoId,
                         ),
                       ),
                     );
@@ -156,7 +183,7 @@ class AlunoDetalhesTela extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (_) => DietasPersonalAlunoTela(
                           nomeAluno: nomeAluno,
-                          alunoId: alunoId, 
+                          alunoId: alunoId, // 🔹 passamos o ID aqui também
                         ),
                       ),
                     );
@@ -165,12 +192,13 @@ class AlunoDetalhesTela extends StatelessWidget {
 
                 const SizedBox(height: 20),
 
+                // 🔹 Novo botão Progresso
                 _botaoMenu(
                   context,
                   titulo: "Progresso",
                   icone: Icons.trending_up,
                   onTap: () {
-                    final sexo = aluno["sexo"] ?? "masculino"; 
+                    final sexo = aluno["sexo"] ?? "masculino"; // 🔹 padrão seguro
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -186,6 +214,7 @@ class AlunoDetalhesTela extends StatelessWidget {
 
                 const SizedBox(height: 30),
 
+                // 🔹 Botão Desvincular (apenas se já estiver vinculado)
                 if (aluno["personalId"] != null)
                   ElevatedButton.icon(
                     onPressed: () => _confirmarDesvinculo(context),
@@ -208,6 +237,124 @@ class AlunoDetalhesTela extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  Future<void> _editarObjetivo(BuildContext context, String alunoId) async {
+    TextEditingController objetivoController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF121212),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.4),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Editar Objetivo",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                TextField(
+                  controller: objetivoController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: "Novo objetivo",
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    filled: true,
+                    fillColor: const Color(0xFF1E1E1E),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.amber, width: 1.5),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.amber, width: 2),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          "Cancelar",
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final novoObjetivo = objetivoController.text.trim();
+                          if (novoObjetivo.isNotEmpty) {
+                            await FirebaseFirestore.instance
+                                .collection("users")
+                                .doc(alunoId)
+                                .update({"objetivo": novoObjetivo});
+                          }
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          "Salvar",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

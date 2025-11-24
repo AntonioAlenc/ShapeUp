@@ -2,85 +2,136 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../modelos/treino.dart';
 
 class TreinoService {
-  // Construtor padrão (produção)
-  TreinoService({FirebaseFirestore? instance})
-      : firestore = instance ?? FirebaseFirestore.instance;
+  // ============================================================
+  // SINGLETON PADRÃO
+  // ============================================================
+  TreinoService._private();
+  static final instancia = TreinoService._private();
 
-  // Construtor exclusivo para testes (impede conexão com Firebase real)
-  TreinoService.test(this.firestore);
+  // ============================================================
+  // REFERÊNCIA PRINCIPAL (pode ser substituída em testes)
+  // ============================================================
+  late CollectionReference<Map<String, dynamic>> _ref =
+  FirebaseFirestore.instance.collection('treinos');
 
-  // Instância padrão (não afeta testes porque você usará o construtor test)
-  static TreinoService instancia = TreinoService();
+  // ============================================================
+  // CONSTRUTOR PARA TESTES COM FAKE FIRESTORE
+  // ============================================================
+  TreinoService.test(FirebaseFirestore fake) {
+    _ref = fake.collection('treinos');
+  }
 
-  // Firestore interno usado pelo serviço
-  final FirebaseFirestore firestore;
+  // ============================================================
+  // INÍCIO DA SEMANA (segunda-feira)
+  // ============================================================
+  DateTime _inicioSemana(DateTime d) {
+    final segunda = d.subtract(Duration(days: d.weekday - 1));
+    return DateTime(segunda.year, segunda.month, segunda.day);
+  }
 
-  // Getter da coleção treinos
-  CollectionReference get treinosRef =>
-      firestore.collection('treinos');
-
-  // Criar treino
-  Future<String> salvarTreino(Treino treino) async {
-    final doc = await treinosRef.add({
-      ...treino.toMap(),
-      'dataCriacao': FieldValue.serverTimestamp(),
-    });
+  // ============================================================
+  // SALVAR
+  // ============================================================
+  Future<String> salvarTreino(Treino t) async {
+    final doc = await _ref.add(t.toMap());
     return doc.id;
   }
 
-  // Atualizar treino existente
+  // ============================================================
+  // ATUALIZAR
+  // ============================================================
   Future<void> atualizarTreino(String id, Treino treino) async {
-    await treinosRef.doc(id).update({
-      ...treino.toMap(),
-      'atualizadoEm': FieldValue.serverTimestamp(),
-    });
+    await _ref.doc(id).update(treino.toMap());
   }
 
-  // Excluir treino
+  // ============================================================
+  // EXCLUIR
+  // ============================================================
   Future<void> excluirTreino(String id) async {
-    await treinosRef.doc(id).delete();
+    await _ref.doc(id).delete();
   }
 
-  // Buscar treino por ID
-  Future<Treino?> buscarPorId(String id) async {
-    final doc = await treinosRef.doc(id).get();
-    if (!doc.exists) return null;
-    return Treino.fromDoc(doc);
-  }
-
-  // Stream: treinos do personal
-  Stream<List<Treino>> streamTreinosDoPersonal(String personalId) {
-    return treinosRef
-        .where('personalId', isEqualTo: personalId)
-        .orderBy('dataCriacao', descending: true)
-        .snapshots()
-        .map((snap) =>
-        snap.docs.map((d) => Treino.fromDoc(d)).toList());
-  }
-
-  // Stream: treinos atribuídos ao aluno
-  Stream<List<Treino>> streamTreinosDoAluno(String alunoId) {
-    return treinosRef
-        .where('alunoId', isEqualTo: alunoId)
-        .orderBy('dataCriacao', descending: true)
-        .snapshots()
-        .map((snap) =>
-        snap.docs.map((d) => Treino.fromDoc(d)).toList());
-  }
-
-  // Atribuir treino ao aluno
+  // ============================================================
+  // ATRIBUIR ALUNO
+  // ============================================================
   Future<void> atribuirTreino(String treinoId, String alunoId) async {
-    await treinosRef.doc(treinoId).update({
-      'alunoId': alunoId,
-      'atualizadoEm': FieldValue.serverTimestamp(),
+    await _ref.doc(treinoId).update({'alunoId': alunoId});
+  }
+
+  // ============================================================
+  // FINALIZAR TREINO
+  // ============================================================
+  Future<void> finalizarTreino(String treinoId) async {
+    final agora = DateTime.now();
+    final segunda = _inicioSemana(agora);
+
+    await _ref.doc(treinoId).update({
+      'concluido': true,
+      'concluidoEm': Timestamp.fromDate(agora),
+      'validadeSemana': Timestamp.fromDate(segunda),
     });
   }
 
-  // Remover atribuição de treino
-  Future<void> removerAtribuicao(String treinoId) async {
-    await treinosRef.doc(treinoId).update({
-      'alunoId': null,
-      'atualizadoEm': FieldValue.serverTimestamp(),
+  // ============================================================
+  // RESET SEMANAL AUTOMÁTICO
+  // ============================================================
+  Future<void> _resetSemanal(DocumentSnapshot doc) async {
+    final data = doc.data() as Map<String, dynamic>;
+    final validade = (data['validadeSemana'] as Timestamp?)?.toDate();
+    final segundaAtual = _inicioSemana(DateTime.now());
+
+    if (validade != null && validade == segundaAtual) return;
+
+    await doc.reference.update({
+      'concluido': false,
+      'concluidoEm': null,
+      'validadeSemana': Timestamp.fromDate(segundaAtual),
+    });
+  }
+
+  // ============================================================
+  // STREAM DO PERSONAL
+  // ============================================================
+  Stream<List<Treino>> streamTreinosDoPersonal(String personalId) {
+    return _ref.where('personalId', isEqualTo: personalId).snapshots().map(
+          (snap) {
+        return snap.docs.map((e) => Treino.fromDoc(e)).toList();
+      },
+    );
+  }
+
+  // ============================================================
+  // STREAM DO ALUNO
+  // ============================================================
+  Stream<List<Treino>> streamTreinosDoAluno(String alunoId) {
+    return _ref.where('alunoId', isEqualTo: alunoId).snapshots().asyncMap(
+          (snap) async {
+        final lista = <Treino>[];
+        for (var doc in snap.docs) {
+          await _resetSemanal(doc);
+          lista.add(Treino.fromDoc(doc));
+        }
+        return lista;
+      },
+    );
+  }
+
+  // ============================================================
+  // STREAM POR DIA — para as abas
+  // ============================================================
+  Stream<List<Treino>> streamTreinosPorDia(
+      String alunoId, String diaSemana) {
+    return _ref
+        .where('alunoId', isEqualTo: alunoId)
+        .where('diaSemana', isEqualTo: diaSemana)
+        .snapshots()
+        .asyncMap((snap) async {
+      final lista = <Treino>[];
+      for (var doc in snap.docs) {
+        await _resetSemanal(doc);
+        lista.add(Treino.fromDoc(doc));
+      }
+      return lista;
     });
   }
 }
